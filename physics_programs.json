@@ -1,0 +1,24 @@
+{
+  "code": 200,
+  "data": {
+    "description": "",
+    "external": {},
+    "html": "<html lang=\"en\"><head>\n\t<meta http-equiv=\"Refresh\" content=\"1; url=find.php\">\n\t<meta charset=\"utf-8\">\n\t<!-- style sheet that has stuff that is uniform on most pages-->\n\t<link rel=\"stylesheet\" type=\"text/css\" href=\"../sitewide/stylings.css\">\n\t\n\t<!-- style sheet that has stuff that is unique for this page-->\n\t<link rel=\"stylesheet\" type=\"text/css\" href=\"stylings.css\">\n\t\n\t<title>Old Problem Page</title>\n<script async=\"\" src=\"https://www.googletagmanager.com/gtag/js?id=G-81CRP06K4L\"></script><script>\n  window.dataLayer = window.dataLayer || [];\n  function gtag(){dataLayer.push(arguments);}\n  gtag('js', new Date());\n\n  gtag('config', 'G-81CRP06K4L');\n</script></head>\n\n<!-- Google tag (gtag.js) -->\n\n\n<body>\n\n<div id=\"FullPage\">\n\t<div id=\"MainBody\">\n\t\t<nav id=\"MainNav\">\n\t\t\t<ul id=\"menu\">\n\t\t\t\t<li><a href=\"/index.html\">Home</a></li>\n\t\t\t\t<li><a href=\"/Physics/Programs/Labs/find.php\">Labs</a></li>\n\t\t\t\t<li><a href=\"/Physics/Programs/Tools/find.php\">Tools</a></li>\n\t\t\t\t<li><a href=\"/Physics/Programs/Games/find.php\">Games</a></li>\n\t\t\t\t<li><a href=\"/Physics/APPrograms/find.php\">HW</a></li>\n\t\t\t\t<li><a href=\"/APReview.html\">AP 1 Review</a></li>\n\t\t\t\t<li><a href=\"/APReview2.html\">AP 2 Review</a></li>\n\t\t\t\t<li><a href=\"/Physics/whatsnew.html\">What's New</a></li>\n\t\t\t\t<li><a href=\"/Physics/index.php\">Search</a></li>\n\t\t\t</ul>\t\n\t\t</nav>\n\t\t<div id=\"ProgramTitle\" class=\"Titles\">Old Problem Page</div>\n\t\t<div id=\"OverviewStuff\" class=\"normaltext\">This is the old address of the page listing the problems on the physics aviary.  Please update your bookmark to the new page.  https://www.thephysicsaviary.com/Physics/APPrograms/find.php</div>\n\t\t\n\t\t</div>\n\t</div>\n\t\n\n\n\n\n\n</body></html>",
+    "httpStatus": 200,
+    "httpStatusText": "OK",
+    "metadata": {
+      "lang": "en"
+    },
+    "title": "Old Problem Page",
+    "url": "https://thephysicsaviary.com/Physics/APPrograms/",
+    "usage": {
+      "tokens": 518
+    }
+  },
+  "meta": {
+    "usage": {
+      "tokens": 518
+    }
+  },
+  "status": 20000
+}

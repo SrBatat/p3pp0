@@ -1,0 +1,22 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "http://thephysicsaviary.com/Physics/Programs/Labs/ProjectileMotion/\nhttp://thephysicsaviary.com/Physics/Programs/Labs/VectorComponents/\nhttp://thephysicsaviary.com/Physics/Programs/Labs/Collision/\nhttp://thephysicsaviary.com/Physics/Programs/Labs/Forces/\nhttp://thephysicsaviary.com/Physics/Programs/Labs/Energy/",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782133346,
+  "id": "2026062221022300258430423e4b27",
+  "model": "glm-4-plus",
+  "object": "chat.completion",
+  "request_id": "2026062221022300258430423e4b27",
+  "usage": {
+    "completion_tokens": 94,
+    "prompt_tokens": 36,
+    "total_tokens": 130
+  }
+}

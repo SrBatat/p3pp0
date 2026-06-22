@@ -1,0 +1,54 @@
+
+============================================================
+Data: 22/06/2026 12:59:21
+URL: https://thephysicsaviary.com/Physics/APPrograms/CarStoppingProblem/
+Simulador: Physics Aviary
+Enunciado: A car is traveling down a country road when the driver needs to suddenly stop the car. Based on the information below, how much time is required to stop the car and how much ground will the car cover while actively braking?
+Variaveis JS: {'StartingSpeed': 20, 'MassOfCar': 914, 'CoefficientOfFriction': 0.39, 'd': datetime.datetime(2026, 6, 22, 12, 59, 12, 148000, tzinfo=datetime.timezone.utc)}
+Campos: ['Time (s):', 'Displacement (m):']
+Calculos:
+1. Velocidade inicial: v = 20 m/s
+2. Coeficiente de atrito: mu = 0.39
+3. Aceleracao de frenagem: a = mu * g = 0.39 * 9.8 = 3.8220 m/s^2
+4. Tempo para parar: t = v / a = 20 / 3.8220 = 5.2329 s
+5. Distancia percorrida: d = v^2/(2*a) = 20^2/(2*3.8220) = 52.3286 m
+Respostas Enviadas: ['5.23', '52.33']
+Respostas Corretas: {}
+Resultado: Resultado: #FFFFFF
+Metodo: calculo_direto
+
+============================================================
+Data: 22/06/2026 13:01:05
+URL: https://thephysicsaviary.com/Physics/APPrograms/CarStoppingProblem/
+Simulador: Physics Aviary
+Enunciado: A car is traveling down a country road when the driver needs to suddenly stop the car. Based on the information below, how much time is required to stop the car and how much ground will the car cover while actively braking?
+Variaveis JS: {'StartingSpeed': 28.2, 'MassOfCar': 1348, 'CoefficientOfFriction': 0.59}
+Campos: ['Time (s):', 'Displacement (m):']
+Calculos:
+1. Velocidade inicial: v = 28.2 m/s
+2. Coeficiente de atrito: mu = 0.59
+3. Aceleracao de frenagem: a = mu * g = 0.59 * 9.8 = 5.7820 m/s^2
+4. Tempo para parar: t = v / a = 28.2 / 5.7820 = 4.8772 s
+5. Distancia percorrida: d = v^2/(2*a) = 28.2^2/(2*5.7820) = 68.7686 m
+Respostas Enviadas: ['4.88', '68.77']
+Respostas Corretas: {'Answer1': 4.87720511933587, 'Answer2': 68.76859218263577}
+Resultado: CORRETO! ✅
+Metodo: calculo_direto
+
+============================================================
+Data: 22/06/2026 13:09:12
+URL: https://thephysicsaviary.com/Physics/APPrograms/CarStoppingProblem/
+Simulador: Physics Aviary
+Enunciado: A car is traveling down a country road when the driver needs to suddenly stop the car. Based on the information below, how much time is required to stop the car and how much ground will the car cover while actively braking?
+Variaveis JS: {'StartingSpeed': 26.8, 'MassOfCar': 1310, 'CoefficientOfFriction': 0.61}
+Campos: ['Time (s):', 'Displacement (m):']
+Calculos:
+1. Velocidade inicial: v = 26.8 m/s
+2. Coeficiente de atrito: mu = 0.61
+3. Aceleracao de frenagem: a = mu * g = 0.61 * 9.8 = 5.9780 m/s^2
+4. Tempo para parar: t = v / a = 26.8 / 5.9780 = 4.4831 s
+5. Distancia percorrida: d = v^2/(2*a) = 26.8^2/(2*5.9780) = 60.0736 m
+Respostas Enviadas: ['4.48', '60.07']
+Respostas Corretas: {'Answer1': 4.4831, 'Answer2': 60.0736}
+Resultado: CORRETO!
+Metodo: calculo_direto

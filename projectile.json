@@ -1,0 +1,24 @@
+{
+  "code": 200,
+  "data": {
+    "description": "",
+    "external": {},
+    "html": "<html><head>\n<script type=\"text/javascript\">\n<!--\nfunction delayer(){\n    window.location = \"/\"\n}\n//-->\n</script>\n</head>\n<body onload=\"setTimeout('delayer()', 3000)\">\n<h2>Prepare to be redirected!</h2>\n<p>The location of the page you have requested has changed.  In just a few moments you will be sent to a page that will let you search this site.</p>\n<p>Hopefully you can find what you were looking for and update your link.</p>\n<!-- \n                                                                                                                        \n--> \n\n<!-- \n    \n--> \n\n<!-- \n               \n--> \n\n               \n--&gt; \n\n\n</body></html>",
+    "httpStatus": 404,
+    "httpStatusText": "Not Found",
+    "metadata": {},
+    "publishedTime": "Tue, 16 Jun 2015 14:11:11 GMT",
+    "title": "",
+    "url": "http://thephysicsaviary.com/Physics/Programs/Labs/ProjectileMotion/",
+    "usage": {
+      "tokens": 132
+    },
+    "warning": "Target URL returned error 404: Not Found"
+  },
+  "meta": {
+    "usage": {
+      "tokens": 132
+    }
+  },
+  "status": 20000
+}

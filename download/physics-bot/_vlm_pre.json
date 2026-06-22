@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "A imagem é um formulário sobre \"Car Stopping Distance\" (Distância de Parada de Carro). Ele apresenta um problema onde um carro viaja em uma estrada e precisa parar abruptamente, com dados fornecidos: coeficiente de atrito (μ = 0,39), velocidade inicial (v = 20,0 m/s) e massa do carro (m = 914 kg). Há também um diagrama de uma estrada com marcações de distância (10 m, 20 m, 30 m, 40 m) e um carro perto de um \"STOP\". Na seção \"Enter Answers\" (Insira Respostas), os campos \"Time (s)\" (Tempo) e \"Displacement (m)\" (Deslocamento) já estão preenchidos com os valores \"5.23\" e \"52.33\", respectivamente. Portanto, **sim, o formulário mostra os valores preenchidos**.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782133211,
+  "id": "20260622210006cc76f58493bc4e21",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260622210006cc76f58493bc4e21",
+  "usage": {
+    "completion_tokens": 208,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1361,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 1569
+  }
+}
