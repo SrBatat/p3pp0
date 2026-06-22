@@ -206,10 +206,42 @@ def calcular_direto_physics_aviary(variaveis, titulo=""):
         ]
         return resultado
 
+    # --- Jolly Gas Giant Problem ---
+    OrbitRadiusm = variaveis.get("OrbitRadiusm")
+    MoonMass = variaveis.get("MoonMass")
+    AngularSpeed = variaveis.get("AngularSpeed")
+
+    if OrbitRadiusm is not None and MoonMass is not None and AngularSpeed is not None:
+        import math as _math
+        G_val = 6.67e-11
+
+        PeriodInHours = 2 * _math.pi / AngularSpeed
+        PeriodInSeconds = PeriodInHours * 3600
+        OrbitCircumference = 2 * _math.pi * OrbitRadiusm
+        Speed = OrbitCircumference / PeriodInSeconds
+        Acceleration = Speed**2 / OrbitRadiusm
+        ForceGravity = MoonMass * Acceleration
+        PlanetMass = ForceGravity * OrbitRadiusm**2 / (G_val * MoonMass)
+
+        resultado["respostas"] = [f"{PeriodInHours:.2f}", f"{Speed:.0f}", f"{PlanetMass:.2e}"]
+        resultado["formulas"] = [
+            f"T = 2*pi / AngularSpeed = 2*pi / {AngularSpeed:.6f} = {PeriodInHours:.4f} h",
+            f"v = 2*pi*r / T(seg) = 2*pi*{OrbitRadiusm:.2e} / {PeriodInSeconds:.2f} = {Speed:.2f} m/s",
+            f"M = v^2 * r / G = {Speed:.2f}^2 * {OrbitRadiusm:.2e} / {G_val} = {PlanetMass:.4e} kg"
+        ]
+        resultado["passos"] = [
+            f"1. Raio orbital: r = {OrbitRadiusm:.2e} m",
+            f"2. Massa da lua: m_lua = {MoonMass:.2e} kg",
+            f"3. Velocidade angular: w = {AngularSpeed:.6f} rad/h",
+            f"4. Periodo: T = 2*pi/w = {PeriodInHours:.4f} h",
+            f"5. Velocidade orbital: v = 2*pi*r/T = {Speed:.2f} m/s",
+            f"6. Massa do planeta: M = v^2*r/G = {PlanetMass:.4e} kg"
+        ]
+        return resultado
+
     # --- Incline Problem ---
     theta = variaveis.get("Angle") or variaveis.get("theta") or variaveis.get("InclineAngle")
     if theta is not None and m is not None:
-        # Adicionar mais formulas conforme necessario
         pass
 
     return resultado
@@ -230,12 +262,15 @@ def resolver_physics_aviary(pagina, url):
     resultados = {}
     usar_ia = False
 
+    # --- PASSO 0: Nome customizavel ---
+    nome = resolver_physics_aviary.nome_aluno if hasattr(resolver_physics_aviary, 'nome_aluno') else "Physics Bot"
+
     # --- PASSO 1: Preencher nome e clicar Begin ---
-    print("[BOT] Iniciando simulador Physics Aviary...")
+    print(f"[BOT] Iniciando simulador Physics Aviary (nome: {nome})...")
     try:
         name_field = pagina.locator("#StudentName")
         if name_field.count() > 0:
-            name_field.fill("Physics Bot")
+            name_field.fill(nome)
             time.sleep(0.3)
     except:
         pass
@@ -265,6 +300,9 @@ def resolver_physics_aviary(pagina, url):
         "Radius", "Temperature", "Pressure", "Volume",
         "InitialHeight", "FinalHeight", "LaunchAngle",
         "LaunchSpeed", "Range", "MaxHeight",
+        # Gas Giant specific
+        "OrbitRadiusm", "OrbitRadiuspx", "MoonMass", "AngularSpeed",
+        "PlanetSizepx", "PlanetSizem",
         "mu", "muK", "muS", "theta",
         "h", "k", "F", "v0", "v1", "v2",
         "m1", "m2", "r", "T", "x", "y",
@@ -286,13 +324,16 @@ def resolver_physics_aviary(pagina, url):
             pass
 
     # Limpa variaveis que provavelmente sao internas do simulador
-    # (valores muito grandes ou que nao sao dados do problema)
+    # Mas preserva variaveis comuns em astronomia que usam numeros grandes
+    variaveis_astronomia = {'OrbitRadiusm', 'MoonMass', 'PlanetSizem'}
     variaveis_filtradas = {}
     for k, v in variaveis_extraidas.items():
-        # Remove variaveis com valores de timestamp ou muito grandes
-        if isinstance(v, (int, float)) and abs(v) > 1e6:
-            continue
-        variaveis_filtradas[k] = v
+        if k in variaveis_astronomia:
+            variaveis_filtradas[k] = v  # Preserva mesmo sendo grande
+        elif isinstance(v, (int, float)) and abs(v) > 1e6:
+            continue  # Remove timestamps e valores internos
+        else:
+            variaveis_filtradas[k] = v
 
     variaveis_extraidas = variaveis_filtradas
     print(f"[BOT] Variaveis extraidas: {variaveis_extraidas}")
@@ -369,15 +410,52 @@ Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
     print(f"\n[BOT] Calculos:\n{passos}")
     print(f"[BOT] Respostas: {respostas}")
 
-    # --- PASSO 5: Preencher respostas ---
+    # --- PASSO 5: Mostrar formulario de resposta ---
+    # Alguns simuladores (Gas Giant) escondem o formulario ate usar o timer
+    form_visivel = False
+    try:
+        form_visivel = pagina.locator("#A1").is_visible()
+    except:
+        pass
+
+    if not form_visivel:
+        print("[BOT] Formulario oculto, ativando ferramentas...")
+        # Tenta ToggleTools (Gas Giant style)
+        try:
+            toggle = pagina.locator("#ToggleTools")
+            if toggle.count() > 0:
+                toggle.click()
+                time.sleep(0.5)
+        except:
+            pass
+
+        # Tenta Start/Stop timer para revelar formulario
+        try:
+            stop_btn = pagina.locator("#StopTimerButton")
+            if stop_btn.count() > 0:
+                stop_btn.click()  # Start timer
+                time.sleep(1)
+                stop_btn.click()  # Stop timer -> mostra formulario
+                time.sleep(0.5)
+        except:
+            pass
+
+        # Force show como ultimo recurso
+        try:
+            if not pagina.locator("#A1").is_visible():
+                pagina.evaluate('$("#SpaceForAnswer").show()')
+                time.sleep(0.3)
+        except:
+            pass
+
+    # --- PASSO 5b: Preencher respostas ---
     for i, resp in enumerate(respostas):
         if i >= num_campos and num_campos > 0:
             break
         input_id = f"#A{i+1}"
         try:
             locator = pagina.locator(input_id)
-            if locator.count() > 0:
-                # Limpa o campo antes de preencher
+            if locator.count() > 0 and locator.is_visible():
                 locator.click()
                 locator.fill("")
                 locator.fill(resp)
@@ -603,15 +681,19 @@ def salvar_log(resultados):
 # 8. FUNCAO PRINCIPAL
 # ====================================================================
 
-def resolver_simulador(url):
+def resolver_simulador(url, nome="Physics Bot"):
     """Funcao principal. Recebe uma URL e resolve o simulador."""
     if not url or not url.startswith("http"):
         print(f"[ERRO] URL invalida: {url}")
         return None
 
+    # Configura nome do aluno
+    resolver_physics_aviary.nome_aluno = nome
+
     print(f"\n{'='*60}")
     print(f"  PHYSICS BOT v2 - Iniciando resolucao")
     print(f"  URL: {url}")
+    print(f"  Nome: {nome}")
     print(f"{'='*60}\n")
 
     from playwright.sync_api import sync_playwright
@@ -662,7 +744,8 @@ def resolver_simulador(url):
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         url = sys.argv[1]
-        resultado = resolver_simulador(url)
+        nome = sys.argv[2] if len(sys.argv) > 2 else "Physics Bot"
+        resultado = resolver_simulador(url, nome)
     else:
-        print("Uso: python physics_bot.py <URL_DO_SIMULADOR>")
-        print("Exemplo: python physics_bot.py https://thephysicsaviary.com/Physics/APPrograms/CarStoppingProblem/")
+        print("Uso: python physics_bot.py <URL_DO_SIMULADOR> [NOME_DO_ALUNO]")
+        print("Exemplo: python physics_bot.py https://thephysicsaviary.com/Physics/APPrograms/CarStoppingProblem/ Helio")

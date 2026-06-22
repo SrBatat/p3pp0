@@ -52,3 +52,39 @@ Respostas Enviadas: ['4.48', '60.07']
 Respostas Corretas: {'Answer1': 4.4831, 'Answer2': 60.0736}
 Resultado: CORRETO!
 Metodo: calculo_direto
+
+============================================================
+Data: 22/06/2026 13:27:45
+URL: https://thephysicsaviary.com/Physics/APPrograms/JollyGasGiantProblem/
+Simulador: Jolly Gas Giant Problem | Nome: Helio
+OrbitRadius = 1.27e+08 m
+MoonMass = 1.90e+23 kg
+AngularSpeed = 0.570040 rad/h
+Calculos:
+  Periodo: T = 2*pi/w = 11.0224 h
+  Velocidade: v = 2*pi*r/T = 20109.74 m/s
+  Massa: M = v^2*r/G = 7.7000e+26 kg
+Respostas: [11.02, 20110, 7.70e+26]
+Corretas: {'Answer1': 11.022361982636498, 'Answer2': 20109.738307674463, 'Answer3': 7.700000000000001e+26}
+Resultado: CORRETO
+
+============================================================
+Data: 22/06/2026 13:30:27
+URL: https://thephysicsaviary.com/Physics/APPrograms/JollyGasGiantProblem/
+Simulador: Physics Aviary
+Enunciado: Below is green gas giant with a moon orbiting around it
+
+Click on the planet to pull up the tools needed to find the planet's mass
+Variaveis JS: {'Acceleration': 0, 'OrbitRadiusm': 318000000, 'OrbitRadiuspx': 318, 'MoonMass': 1.4e+23, 'AngularSpeed': 0.06956022695334736, 'PlanetSizepx': 28, 'PlanetSizem': 28000000}
+Campos: ['Period (hours):', 'Velocity (m/s):', 'Mass (kg):']
+Calculos:
+1. Raio orbital: r = 3.18e+08 m
+2. Massa da lua: m_lua = 1.40e+23 kg
+3. Velocidade angular: w = 0.069560 rad/h
+4. Periodo: T = 2*pi/w = 90.3273 h
+5. Velocidade orbital: v = 2*pi*r/T = 6144.49 m/s
+6. Massa do planeta: M = v^2*r/G = 1.8000e+26 kg
+Respostas Enviadas: ['90.33', '6144', '1.80e+26']
+Respostas Corretas: {'Answer1': 90.3273, 'Answer2': 6144.4867, 'Answer3': 1.8e+26}
+Resultado: CORRETO!
+Metodo: calculo_direto

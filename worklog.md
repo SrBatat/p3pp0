@@ -19,5 +19,8 @@ Stage Summary:
 - Projeto funcional em /home/z/my-project/scripts/physics_bot.py
 - Screenshots em /home/z/my-project/download/physics-bot/screenshots/
 - Log de cálculos em /home/z/my-project/download/physics-bot/log_calculos.txt
-- 3/3 testes corretos no simulador Physics Aviary
+- 3/3 testes corretos no simulador Car Stopping Problem
+- 2/2 testes corretos no simulador Jolly Gas Giant Problem (nome: Helio)
+- Suporte a nome customizável (2o argumento)
+- Suporte a simuladores com timer/hidden form (Gas Giant style)
 - Zero configuração necessária (não precisa de API key)

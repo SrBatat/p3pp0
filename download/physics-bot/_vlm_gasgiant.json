@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "O resultado está **CORRETO**.  \n\nValores apresentados:  \n- **Period (hours)**: Predicted = 11.02, Actual = 11.0  \n- **Velocity (m/s)**: Predicted = 20110, Actual = 20110  \n- **Mass (kg)**: Predicted = 7.70e+26, Actual = 7.70e+26",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782134880,
+  "id": "2026062221275542705a66ae494e0e",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "2026062221275542705a66ae494e0e",
+  "usage": {
+    "completion_tokens": 89,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 1543,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 1632
+  }
+}
