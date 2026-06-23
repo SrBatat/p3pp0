@@ -1,0 +1,710 @@
+     1→"use client";
+     2→
+     3→import { useState, useRef, useEffect } from "react";
+     4→import { Button } from "@/components/ui/button";
+     5→import { Input } from "@/components/ui/input";
+     6→import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+     7→import { Badge } from "@/components/ui/badge";
+     8→import { Skeleton } from "@/components/ui/skeleton";
+     9→import {
+    10→  Select,
+    11→  SelectContent,
+    12→  SelectItem,
+    13→  SelectTrigger,
+    14→  SelectValue,
+    15→} from "@/components/ui/select";
+    16→import {
+    17→  Send,
+    18→  Bot,
+    19→  User,
+    20→  FlaskConical,
+    21→  CheckCircle2,
+    22→  XCircle,
+    23→  Loader2,
+    24→  Settings,
+    25→  History,
+    26→  Trash2,
+    27→  ExternalLink,
+    28→  Sparkles,
+    29→  ImageIcon,
+    30→  AlertTriangle,
+    31→  Zap,
+    32→  Skull,
+    33→} from "lucide-react";
+    34→import {
+    35→  Dialog,
+    36→  DialogContent,
+    37→  DialogHeader,
+    38→  DialogTitle,
+    39→  DialogTrigger,
+    40→} from "@/components/ui/dialog";
+    41→import { toast } from "sonner";
+    42→
+    43→// AI Models available
+    44→const AI_MODELS = [
+    45→  { id: "glm-4", name: "GLM-4", desc: "Modelo principal, rápido e preciso" },
+    46→  { id: "glm-4-plus", name: "GLM-4 Plus", desc: "Modelo avançado, mais preciso" },
+    47→  { id: "glm-4-flash", name: "GLM-4 Flash", desc: "Modelo rápido, respostas instantâneas" },
+    48→  { id: "glm-4v-plus", name: "GLM-4V Plus", desc: "Visão + texto, analisa imagens" },
+    49→];
+    50→
+    51→// Technical error descriptions
+    52→const ERROR_EXPLANATIONS: Record<string, { title: string; desc: string; fix: string }> = {
+    53→  E_URL_INVALID: {
+    54→    title: "URL Inválida",
+    55→    desc: "A URL fornecida não é um endereço HTTP/HTTPS válido.",
+    56→    fix: "Verifique se a URL começa com http:// ou https:// e está completa.",
+    57→  },
+    58→  E_PLAYWRIGHT_TIMEOUT: {
+    59→    title: "Timeout do Playwright",
+    60→    desc: "O navegador headless excedeu o tempo limite de 180 segundos. Isso acontece quando o simulador tem animações longas ou trava.",
+    61→    fix: "Tente novamente. Se persistir, o simulador pode estar fora do ar ou ter mudado de estrutura.",
+    62→  },
+    63→  E_PLAYWRIGHT_CRASH: {
+    64→    title: "Crash do Playwright/Chromium",
+    65→    desc: "O navegador Chromium crashou durante a execução. Possível falta de memória ou binário corrompido.",
+    66→    fix: "Verifique se o Chromium está instalado. Em Vercel, use uma função serverless com Playwright compatível.",
+    67→  },
+    68→  E_PYTHON_ERROR: {
+    69→    title: "Erro no Script Python",
+    70→    desc: "O physics_bot.py falhou. Pode ser erro de sintaxe, seletor CSS não encontrado, ou variável JS inexistente.",
+    71→    fix: "Verifique o log do Python. O simulador pode ter estrutura diferente da esperada.",
+    72→  },
+    73→  E_VLM_ERROR: {
+    74→    title: "Erro no VLM (Vision Model)",
+    75→    desc: "O modelo de visão falhou ao verificar o screenshot. A verificação visual foi pulada.",
+    76→    fix: "A resolução ainda pode estar correta. Verifique o screenshot manualmente.",
+    77→  },
+    78→  E_AI_SUMMARY: {
+    79→    title: "Erro no Resumo IA",
+    80→    desc: "O modelo de IA falhou ao gerar o resumo didático. O cálculo bruto foi retornado.",
+    81→    fix: "Tente novamente ou troque o modelo de IA nas configurações.",
+    82→  },
+    83→  E_SCREENSHOT_NOT_FOUND: {
+    84→    title: "Screenshot Não Encontrado",
+    85→    desc: "O Playwright não gerou o arquivo de screenshot. O simulador pode ter falhado antes de renderizar.",
+    86→    fix: "Verifique se o simulador carrega corretamente no navegador.",
+    87→  },
+    88→  E_DB_ERROR: {
+    89→    title: "Erro de Banco de Dados",
+    90→    desc: "Falha ao salvar/ler no banco. Verifique a conexão Prisma/Supabase.",
+    91→    fix: "Verifique DATABASE_URL no .env e se o banco está acessível.",
+    92→  },
+    93→  E_FETCH_ERROR: {
+    94→    title: "Erro de Fetch / Gateway",
+    95→    desc: "O gateway (Caddy) ou o servidor Next.js retornou erro 502/504. Isso acontece porque o solver demora 25-60s e o gateway corta a conexão antes.",
+    96→    fix: "A arquitetura assíncrona (start + polling) já está ativa. Se persistir, verifique se o servidor está rodando.",
+    97→  },
+    98→  E_POLL_TIMEOUT: {
+    99→    title: "Timeout no Polling",
+   100→    desc: "O solver demorou mais de 240 segundos para completar. Isso é incomum e pode indicar que o Playwright travou.",
+   101→    fix: "Tente novamente. Se persistir, o simulador pode ter uma animação muito longa.",
+   102→  },
+   103→};
+   104→
+   105→interface SolverResult {
+   106→  id?: string;
+   107→  success: boolean;
+   108→  simulatorType: string;
+   109→  enunciado: string;
+   110→  variaveis: Record<string, unknown>;
+   111→  calculos: string;
+   112→  respostas: string[];
+   113→  respostasCorretas: Record<string, number>;
+   114→  resultado: string;
+   115→  metodo: string;
+   116→  screenshotUrl: string | null;
+   117→  errors?: string[];
+   118→  technicalDetail?: string;
+   119→  model?: string;
+   120→  error?: string;
+   121→}
+   122→
+   123→interface HistoryItem {
+   124→  id: string;
+   125→  url: string;
+   126→  userName: string;
+   127→  status: string;
+   128→  resultado: string | null;
+   129→  screenshotUrl: string | null;
+   130→  createdAt: string;
+   131→}
+   132→
+   133→interface ChatMessage {
+   134→  id: string;
+   135→  role: "user" | "assistant";
+   136→  content: string;
+   137→  result?: SolverResult;
+   138→  timestamp: Date;
+   139→}
+   140→
+   141→export default function Home() {
+   142→  const [messages, setMessages] = useState<ChatMessage[]>([]);
+   143→  const [inputUrl, setInputUrl] = useState("");
+   144→  const [userName, setUserName] = useState("Helio");
+   145→  const [selectedModel, setSelectedModel] = useState("glm-4");
+   146→  const [isLoading, setIsLoading] = useState(false);
+   147→  const [loadingStep, setLoadingStep] = useState("");
+   148→  const [history, setHistory] = useState<HistoryItem[]>([]);
+   149→  const [showHistory, setShowHistory] = useState(false);
+   150→  const [showSettings, setShowSettings] = useState(false);
+   151→  const chatEndRef = useRef<HTMLDivElement>(null);
+   152→  const inputRef = useRef<HTMLInputElement>(null);
+   153→
+   154→  useEffect(() => {
+   155→    setMessages([
+   156→      {
+   157→        id: "welcome",
+   158→        role: "assistant",
+   159→        content:
+   160→          "Bem-vindo ao **p3pp4** 🔮\n\nCole o link de qualquer simulador de física e eu resolvo automaticamente.\n\n• 🔬 Analiso o simulador com IA\n• 🧮 Calculo as respostas com precisão\n• 📸 Gero screenshot com seu nome\n• 📝 Explico passo a passo\n• 🤖 Múltiplos modelos de IA disponíveis",
+   161→        timestamp: new Date(),
+   162→      },
+   163→    ]);
+   164→  }, []);
+   165→
+   166→  useEffect(() => {
+   167→    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+   168→  }, [messages, isLoading]);
+   169→
+   170→  const loadHistory = async () => {
+   171→    try {
+   172→      const res = await fetch("/api/history");
+   173→      if (res.ok) setHistory(await res.json());
+   174→    } catch {}
+   175→  };
+   176→
+   177→  const handleSolve = async () => {
+   178→    const url = inputUrl.trim();
+   179→    if (!url || (!url.startsWith("http://") && !url.startsWith("https://"))) {
+   180→      toast.error("Cole uma URL que comece com http:// ou https://");
+   181→      return;
+   182→    }
+   183→
+   184→    setInputUrl("");
+   185→
+   186→    const userMsg: ChatMessage = {
+   187→      id: `user-${Date.now()}`,
+   188→      role: "user",
+   189→      content: url,
+   190→      timestamp: new Date(),
+   191→    };
+   192→    setMessages((prev) => [...prev, userMsg]);
+   193→    setIsLoading(true);
+   194→    setLoadingStep("Iniciando solver...");
+   195→
+   196→    const steps = [
+   197→      "Iniciando solver...",
+   198→      "Analisando simulador...",
+   199→      "Extraindo dados com Playwright...",
+   200→      "Calculando respostas...",
+   201→      "Preenchendo simulador...",
+   202→      "Gerando screenshot...",
+   203→      "Criando resumo didático...",
+   204→    ];
+   205→    let stepIdx = 0;
+   206→    const stepInterval = setInterval(() => {
+   207→      stepIdx = (stepIdx + 1) % steps.length;
+   208→      setLoadingStep(steps[stepIdx]);
+   209→    }, 4000);
+   210→
+   211→    try {
+   212→      // Step 1: Start the job (returns immediately)
+   213→      const startRes = await fetch("/api/solve/start", {
+   214→        method: "POST",
+   215→        headers: { "Content-Type": "application/json" },
+   216→        body: JSON.stringify({ url, userName, model: selectedModel }),
+   217→      });
+   218→
+   219→      if (!startRes.ok) {
+   220→        throw new Error(`HTTP ${startRes.status}: ${startRes.statusText}`);
+   221→      }
+   222→
+   223→      const startData = await startRes.json();
+   224→      const jobId = startData.id;
+   225→
+   226→      if (!jobId) {
+   227→        throw new Error("No job ID returned from server");
+   228→      }
+   229→
+   230→      // Step 2: Poll for result every 3 seconds
+   231→      const MAX_POLLS = 80; // 80 * 3s = 240s max
+   232→      let pollCount = 0;
+   233→
+   234→      const pollForResult = async (): Promise<any> => {
+   235→        pollCount++;
+   236→        if (pollCount > MAX_POLLS) {
+   237→          throw new Error("E_POLL_TIMEOUT");
+   238→        }
+   239→
+   240→        await new Promise((r) => setTimeout(r, 3000));
+   241→
+   242→        const statusRes = await fetch(`/api/solve/status?id=${jobId}`);
+   243→        if (!statusRes.ok) {
+   244→          throw new Error(`Status check failed: HTTP ${statusRes.status}`);
+   245→        }
+   246→
+   247→        const statusData = await statusRes.json();
+   248→
+   249→        if (statusData.complete) {
+   250→          return statusData;
+   251→        }
+   252→
+   253→        // Update loading step with progress
+   254→        setLoadingStep(`Aguardando solver... (${pollCount * 3}s)`);
+   255→
+   256→        return pollForResult();
+   257→      };
+   258→
+   259→      const data = await pollForResult();
+   260→      clearInterval(stepInterval);
+   261→
+   262→      const isCorrect = data.resultado?.includes("CORRETO");
+   263→
+   264→      const assistantMsg: ChatMessage = {
+   265→        id: `ai-${Date.now()}`,
+   266→        role: "assistant",
+   267→        content: isCorrect
+   268→          ? `✅ **Resolvido com sucesso!** O simulador foi resolvido corretamente.`
+   269→          : `❌ **Resultado:** ${data.resultado || "Incorreto"}`,
+   270→        result: data,
+   271→        timestamp: new Date(),
+   272→      };
+   273→      setMessages((prev) => [...prev, assistantMsg]);
+   274→      toast.success(isCorrect ? "Correto!" : "Verifique o resultado");
+   275→    } catch (error: any) {
+   276→      clearInterval(stepInterval);
+   277→
+   278→      const isTimeout = error.message?.includes("E_POLL_TIMEOUT");
+   279→      const errorCode = isTimeout ? "E_POLL_TIMEOUT" : "E_FETCH_ERROR";
+   280→
+   281→      const assistantMsg: ChatMessage = {
+   282→        id: `ai-${Date.now()}`,
+   283→        role: "assistant",
+   284→        content: `❌ **Erro ao resolver o simulador.**`,
+   285→        result: {
+   286→          success: false,
+   287→          simulatorType: "",
+   288→          enunciado: "",
+   289→          variaveis: {},
+   290→          calculos: "",
+   291→          respostas: [],
+   292→          respostasCorretas: {},
+   293→          resultado: "ERRO",
+   294→          metodo: "",
+   295→          screenshotUrl: null,
+   296→          errors: [errorCode],
+   297→          technicalDetail: isTimeout
+   298→            ? "Solver excedeu 240s de espera. O processo pode ter travado."
+   299→            : error.message,
+   300→          error: error.message,
+   301→        },
+   302→        timestamp: new Date(),
+   303→      };
+   304→      setMessages((prev) => [...prev, assistantMsg]);
+   305→      toast.error("Erro — veja detalhes técnicos");
+   306→    } finally {
+   307→      setIsLoading(false);
+   308→      setLoadingStep("");
+   309→      inputRef.current?.focus();
+   310→    }
+   311→  };
+   312→
+   313→  const handleDeleteHistory = async (id: string) => {
+   314→    try {
+   315→      await fetch("/api/history", {
+   316→        method: "DELETE",
+   317→        headers: { "Content-Type": "application/json" },
+   318→        body: JSON.stringify({ id }),
+   319→      });
+   320→      setHistory((prev) => prev.filter((h) => h.id !== id));
+   321→    } catch {}
+   322→  };
+   323→
+   324→  const renderErrorDetail = (result: SolverResult) => {
+   325→    if (!result.errors || result.errors.length === 0) return null;
+   326→
+   327→    return (
+   328→      <Card className="border-destructive/50 bg-destructive/5">
+   329→        <CardHeader className="pb-2">
+   330→          <CardTitle className="text-sm flex items-center gap-2 text-destructive">
+   331→            <AlertTriangle className="w-4 h-4" />
+   332→            Detalhes Técnicos do Erro
+   333→          </CardTitle>
+   334→        </CardHeader>
+   335→        <CardContent className="space-y-3">
+   336→          {result.errors.map((code) => {
+   337→            const info = ERROR_EXPLANATIONS[code];
+   338→            if (!info) return null;
+   339→            return (
+   340→              <div key={code} className="space-y-1">
+   341→                <div className="flex items-center gap-2">
+   342→                  <Badge variant="destructive" className="font-mono text-xs">
+   343→                    {code}
+   344→                  </Badge>
+   345→                  <span className="text-sm font-semibold text-destructive">
+   346→                    {info.title}
+   347→                  </span>
+   348→                </div>
+   349→                <p className="text-xs text-muted-foreground ml-2">{info.desc}</p>
+   350→                <p className="text-xs text-emerald-400 ml-2">
+   351→                  💡 {info.fix}
+   352→                </p>
+   353→              </div>
+   354→            );
+   355→          })}
+   356→          {result.technicalDetail && (
+   357→            <div className="mt-2 p-2 rounded bg-black/30 border border-border">
+   358→              <p className="text-[10px] font-mono text-muted-foreground break-all">
+   359→                {result.technicalDetail}
+   360→              </p>
+   361→            </div>
+   362→          )}
+   363→        </CardContent>
+   364→      </Card>
+   365→    );
+   366→  };
+   367→
+   368→  const renderResult = (result: SolverResult) => {
+   369→    const isCorrect = result.resultado?.includes("CORRETO");
+   370→    return (
+   371→      <div className="mt-4 space-y-4">
+   372→        {/* Status */}
+   373→        <div className="flex items-center gap-2 flex-wrap">
+   374→          {isCorrect ? (
+   375→            <Badge className="bg-emerald-900/50 text-emerald-400 border-emerald-800">
+   376→              <CheckCircle2 className="w-3 h-3 mr-1" />
+   377→              CORRETO
+   378→            </Badge>
+   379→          ) : (
+   380→            <Badge variant="destructive">
+   381→              <XCircle className="w-3 h-3 mr-1" />
+   382→              {result.resultado}
+   383→            </Badge>
+   384→          )}
+   385→          <Badge variant="outline" className="border-purple-800 text-purple-300">
+   386→            <FlaskConical className="w-3 h-3 mr-1" />
+   387→            {result.simulatorType === "physics_aviary" ? "Physics Aviary" : "Genérico"}
+   388→          </Badge>
+   389→          <Badge variant="secondary" className="bg-purple-900/30 text-purple-300">
+   390→            <Zap className="w-3 h-3 mr-1" />
+   391→            {result.metodo}
+   392→          </Badge>
+   393→          {result.model && (
+   394→            <Badge variant="secondary" className="bg-violet-900/30 text-violet-300">
+   395→              🤖 {result.model}
+   396→            </Badge>
+   397→          )}
+   398→        </div>
+   399→
+   400→        {/* Screenshot */}
+   401→        {result.screenshotUrl && (
+   402→          <Card className="overflow-hidden border-purple-900/30 bg-card glow-purple">
+   403→            <CardHeader className="pb-2">
+   404→              <CardTitle className="text-sm flex items-center gap-2 text-purple-300">
+   405→                <ImageIcon className="w-4 h-4" />
+   406→                Screenshot do Resultado
+   407→              </CardTitle>
+   408→            </CardHeader>
+   409→            <CardContent className="p-2">
+   410→              <img
+   411→                src={result.screenshotUrl}
+   412→                alt="Screenshot do simulador resolvido"
+   413→                className="w-full rounded-md border border-purple-900/20"
+   414→              />
+   415→            </CardContent>
+   416→          </Card>
+   417→        )}
+   418→
+   419→        {/* Respostas */}
+   420→        {result.respostas.length > 0 && (
+   421→          <Card className="border-purple-900/30 bg-card">
+   422→            <CardHeader className="pb-2">
+   423→              <CardTitle className="text-sm flex items-center gap-2 text-purple-300">
+   424→                <Sparkles className="w-4 h-4" />
+   425→                Respostas
+   426→              </CardTitle>
+   427→            </CardHeader>
+   428→            <CardContent>
+   429→              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+   430→                {result.respostas.map((resp, i) => {
+   431→                  const correctKey = `Answer${i + 1}`;
+   432→                  const correctVal = result.respostasCorretas?.[correctKey];
+   433→                  return (
+   434→                    <div
+   435→                      key={i}
+   436→                      className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border"
+   437→                    >
+   438→                      <span className="text-sm text-muted-foreground">Campo {i + 1}</span>
+   439→                      <div className="text-right">
+   440→                        <span className="font-mono font-bold text-foreground">{resp}</span>
+   441→                        {correctVal !== undefined && (
+   442→                          <span className="text-[11px] text-muted-foreground ml-2">
+   443→                            (exato: {typeof correctVal === "number" ? correctVal.toPrecision(4) : correctVal})
+   444→                          </span>
+   445→                        )}
+   446→                      </div>
+   447→                    </div>
+   448→                  );
+   449→                })}
+   450→              </div>
+   451→            </CardContent>
+   452→          </Card>
+   453→        )}
+   454→
+   455→        {/* Cálculos / Resumo */}
+   456→        {result.calculos && (
+   457→          <Card className="border-purple-900/30 bg-card">
+   458→            <CardHeader className="pb-2">
+   459→              <CardTitle className="text-sm flex items-center gap-2 text-purple-300">
+   460→                📝 Resumo da Resolução
+   461→              </CardTitle>
+   462→            </CardHeader>
+   463→            <CardContent>
+   464→              <div className="prose prose-sm prose-invert max-w-none">
+   465→                {result.calculos.split("\n").map((line, i) => {
+   466→                  if (line.startsWith("## "))
+   467→                    return <h3 key={i} className="text-purple-300 font-bold mt-4 mb-1 text-sm">{line.replace("## ", "")}</h3>;
+   468→                  if (line.startsWith("### "))
+   469→                    return <h4 key={i} className="text-violet-300 font-semibold mt-3 mb-1 text-sm">{line.replace("### ", "")}</h4>;
+   470→                  if (line.startsWith("**") && line.endsWith("**"))
+   471→                    return <strong key={i} className="text-purple-200">{line.replace(/\*\*/g, "")}</strong>;
+   472→                  if (line.startsWith("- ") || line.startsWith("* "))
+   473→                    return <li key={i} className="ml-4 text-sm text-muted-foreground">{line.replace(/^[-*]\s*/, "")}</li>;
+   474→                  if (line.startsWith("```"))
+   475→                    return null;
+   476→                  if (line.match(/^\d+\./))
+   477→                    return <li key={i} className="ml-4 text-sm list-decimal text-muted-foreground">{line.replace(/^\d+\.\s*/, "")}</li>;
+   478→                  return line ? <p key={i} className="text-sm leading-relaxed text-muted-foreground">{line}</p> : null;
+   479→                })}
+   480→              </div>
+   481→            </CardContent>
+   482→          </Card>
+   483→        )}
+   484→
+   485→        {/* Error details */}
+   486→        {renderErrorDetail(result)}
+   487→      </div>
+   488→    );
+   489→  };
+   490→
+   491→  return (
+   492→    <div className="min-h-screen flex flex-col bg-background">
+   493→      {/* Header */}
+   494→      <header className="sticky top-0 z-50 border-b border-purple-900/20 bg-background/90 backdrop-blur-md">
+   495→        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+   496→          <div className="flex items-center gap-3">
+   497→            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-purple-900/30">
+   498→              <Skull className="w-5 h-5 text-white" />
+   499→            </div>
+   500→            <div>
+   501→              <h1 className="font-bold text-lg leading-tight glow-text text-purple-100">
+   502→                p3pp4
+   503→              </h1>
+   504→              <p className="text-[10px] text-purple-400/60">
+   505→                AI Physics Solver
+   506→              </p>
+   507→            </div>
+   508→          </div>
+   509→
+   510→          <div className="flex items-center gap-2">
+   511→            {/* Model selector */}
+   512→            <Select value={selectedModel} onValueChange={setSelectedModel}>
+   513→              <SelectTrigger className="w-[130px] h-8 text-xs border-purple-900/30 bg-secondary">
+   514→                <SelectValue />
+   515→              </SelectTrigger>
+   516→              <SelectContent className="bg-card border-purple-900/30">
+   517→                {AI_MODELS.map((m) => (
+   518→                  <SelectItem key={m.id} value={m.id} className="text-xs">
+   519→                    <span className="font-semibold">{m.name}</span>
+   520→                  </SelectItem>
+   521→                ))}
+   522→              </SelectContent>
+   523→            </Select>
+   524→
+   525→            {/* Settings */}
+   526→            <Dialog open={showSettings} onOpenChange={setShowSettings}>
+   527→              <DialogTrigger asChild>
+   528→                <Button variant="outline" size="sm" className="gap-1.5 border-purple-900/30 text-purple-300 hover:bg-purple-900/20 h-8">
+   529→                  <Settings className="w-3.5 h-3.5" />
+   530→                  <span className="hidden sm:inline text-xs">{userName}</span>
+   531→                </Button>
+   532→              </DialogTrigger>
+   533→              <DialogContent className="bg-card border-purple-900/30">
+   534→                <DialogHeader>
+   535→                  <DialogTitle className="text-purple-200">Configurações</DialogTitle>
+   536→                </DialogHeader>
+   537→                <div className="space-y-4 pt-2">
+   538→                  <div>
+   539→                    <label className="text-sm font-medium text-purple-300">Seu nome (aparece no simulador)</label>
+   540→                    <Input
+   541→                      value={userName}
+   542→                      onChange={(e) => setUserName(e.target.value)}
+   543→                      placeholder="Seu nome"
+   544→                      className="mt-1 bg-secondary border-purple-900/30"
+   545→                    />
+   546→                  </div>
+   547→                  <div>
+   548→                    <label className="text-sm font-medium text-purple-300">Modelo de IA</label>
+   549→                    <Select value={selectedModel} onValueChange={setSelectedModel}>
+   550→                      <SelectTrigger className="mt-1 bg-secondary border-purple-900/30">
+   551→                        <SelectValue />
+   552→                      </SelectTrigger>
+   553→                      <SelectContent className="bg-card border-purple-900/30">
+   554→                        {AI_MODELS.map((m) => (
+   555→                          <SelectItem key={m.id} value={m.id}>
+   556→                            <div>
+   557→                              <span className="font-semibold">{m.name}</span>
+   558→                              <span className="text-xs text-muted-foreground ml-2">{m.desc}</span>
+   559→                            </div>
+   560→                          </SelectItem>
+   561→                        ))}
+   562→                      </SelectContent>
+   563→                    </Select>
+   564→                  </div>
+   565→                </div>
+   566→              </DialogContent>
+   567→            </Dialog>
+   568→
+   569→            {/* History */}
+   570→            <Dialog open={showHistory} onOpenChange={(o) => { setShowHistory(o); if (o) loadHistory(); }}>
+   571→              <DialogTrigger asChild>
+   572→                <Button variant="outline" size="sm" className="gap-1.5 border-purple-900/30 text-purple-300 hover:bg-purple-900/20 h-8">
+   573→                  <History className="w-3.5 h-3.5" />
+   574→                  <span className="hidden sm:inline text-xs">Histórico</span>
+   575→                </Button>
+   576→              </DialogTrigger>
+   577→              <DialogContent className="bg-card border-purple-900/30">
+   578→                <DialogHeader>
+   579→                  <DialogTitle className="text-purple-200">Histórico</DialogTitle>
+   580→                </DialogHeader>
+   581→                <div className="space-y-2 max-h-96 overflow-y-auto">
+   582→                  {history.length === 0 ? (
+   583→                    <p className="text-sm text-muted-foreground text-center py-8">Nenhuma resolução ainda</p>
+   584→                  ) : (
+   585→                    history.map((item) => (
+   586→                      <div key={item.id} className="flex items-start justify-between p-3 rounded-lg border border-purple-900/20 bg-muted/30">
+   587→                        <div className="flex-1 min-w-0">
+   588→                          <p className="text-sm font-medium truncate">{item.url}</p>
+   589→                          <p className="text-xs text-muted-foreground">{item.userName} · {new Date(item.createdAt).toLocaleString("pt-BR")}</p>
+   590→                          {item.resultado && (
+   591→                            <Badge variant={item.resultado.includes("CORRETO") ? "default" : "destructive"} className="mt-1 text-[10px]">
+   592→                              {item.resultado}
+   593→                            </Badge>
+   594→                          )}
+   595→                        </div>
+   596→                        <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteHistory(item.id)}>
+   597→                          <Trash2 className="w-4 h-4" />
+   598→                        </Button>
+   599→                      </div>
+   600→                    ))
+   601→                  )}
+   602→                </div>
+   603→              </DialogContent>
+   604→            </Dialog>
+   605→          </div>
+   606→        </div>
+   607→      </header>
+   608→
+   609→      {/* Chat */}
+   610→      <main className="flex-1 overflow-y-auto">
+   611→        <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+   612→          {messages.map((msg) => (
+   613→            <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+   614→              {msg.role === "assistant" && (
+   615→                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center shrink-0 mt-1 shadow-lg shadow-purple-900/20">
+   616→                  <Skull className="w-4 h-4 text-white" />
+   617→                </div>
+   618→              )}
+   619→              <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${msg.role === "user" ? "bg-purple-600/20 border border-purple-700/30 text-purple-100" : "bg-muted/50 border border-purple-900/10"}`}>
+   620→                {msg.role === "user" ? (
+   621→                  <p className="text-sm break-all">{msg.content}</p>
+   622→                ) : (
+   623→                  <div>
+   624→                    <div className="text-sm whitespace-pre-wrap leading-relaxed text-purple-100/90">
+   625→                      {msg.content.split("\n").map((line, i) => {
+   626→                        if (line.startsWith("**") && line.endsWith("**"))
+   627→                          return <strong key={i} className="text-purple-200">{line.replace(/\*\*/g, "")}</strong>;
+   628→                        if (line.startsWith("•"))
+   629→                          return <div key={i} className="ml-2 text-muted-foreground">{line}</div>;
+   630→                        return <span key={i}>{line}{i < msg.content.split("\n").length - 1 && <br />}</span>;
+   631→                      })}
+   632→                    </div>
+   633→                    {msg.result && renderResult(msg.result)}
+   634→                  </div>
+   635→                )}
+   636→                <p className="text-[10px] text-purple-400/30 mt-1.5">
+   637→                  {msg.timestamp.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+   638→                </p>
+   639→              </div>
+   640→              {msg.role === "user" && (
+   641→                <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center shrink-0 mt-1 border border-purple-900/20">
+   642→                  <User className="w-4 h-4 text-purple-300" />
+   643→                </div>
+   644→              )}
+   645→            </div>
+   646→          ))}
+   647→
+   648→          {isLoading && (
+   649→            <div className="flex gap-3">
+   650→              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center shrink-0 shadow-lg shadow-purple-900/20">
+   651→                <Skull className="w-4 h-4 text-white" />
+   652→              </div>
+   653→              <div className="bg-muted/50 border border-purple-900/10 rounded-2xl px-4 py-3">
+   654→                <div className="flex items-center gap-3">
+   655→                  <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+   656→                  <div>
+   657→                    <p className="text-sm font-medium text-purple-200">{loadingStep || "Processando..."}</p>
+   658→                    <p className="text-[11px] text-muted-foreground">Isso pode levar 25-60 segundos</p>
+   659→                  </div>
+   660→                </div>
+   661→                <div className="mt-3 space-y-2">
+   662→                  <Skeleton className="h-3 w-3/4 bg-purple-900/10" />
+   663→                  <Skeleton className="h-3 w-1/2 bg-purple-900/10" />
+   664→                  <Skeleton className="h-24 w-full bg-purple-900/10" />
+   665→                </div>
+   666→              </div>
+   667→            </div>
+   668→          )}
+   669→
+   670→          <div ref={chatEndRef} />
+   671→        </div>
+   672→      </main>
+   673→
+   674→      {/* Input */}
+   675→      <footer className="sticky bottom-0 border-t border-purple-900/20 bg-background/90 backdrop-blur-md">
+   676→        <div className="max-w-4xl mx-auto px-4 py-3">
+   677→          <form onSubmit={(e) => { e.preventDefault(); handleSolve(); }} className="flex gap-2">
+   678→            <div className="flex-1 relative">
+   679→              <Input
+   680→                ref={inputRef}
+   681→                value={inputUrl}
+   682→                onChange={(e) => setInputUrl(e.target.value)}
+   683→                placeholder="Cole aqui o link do simulador de física..."
+   684→                disabled={isLoading}
+   685→                className="pr-4 h-12 rounded-xl text-sm bg-secondary border-purple-900/30 placeholder:text-purple-400/30 focus:border-purple-500"
+   686→                type="text"
+   687→              />
+   688→            </div>
+   689→            <Button
+   690→              type="submit"
+   691→              disabled={isLoading || !inputUrl.trim()}
+   692→              className="h-12 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white shadow-lg shadow-purple-900/30 disabled:opacity-40"
+   693→            >
+   694→              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+   695→            </Button>
+   696→          </form>
+   697→          <div className="flex items-center justify-between mt-2">
+   698→            <p className="text-[10px] text-purple-400/30">
+   699→              p3pp4 · {selectedModel} · {userName}
+   700→            </p>
+   701→            <p className="text-[10px] text-purple-400/30">
+   702→              Powered by Z.AI + Playwright
+   703→            </p>
+   704→          </div>
+   705→        </div>
+   706→      </footer>
+   707→    </div>
+   708→  );
+   709→}
+   710→

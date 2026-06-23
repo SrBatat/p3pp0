@@ -1,0 +1,22 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "# Resumo Didático para Resolver Problemas de Física com Resultado Indeterminado\n\n## Passo a Passo para Resolver Problemas de Física\n\n### 1. Entender o Enunciado\n- Leia o problema atentamente, identificando os dados fornecidos e o que se pede\n- Destaque as grandezas físicas envolvidas (massa, tempo, força, etc.)\n- Identifique o sistema em estudo e as condições iniciais\n\n### 2. Identificar os Princípios Físicos Aplicáveis\n- Determine quais leis ou conceitos da física se aplicam à situação\n- Exemplos: Lei de Newton, Conservação de Energia, Equações de Movimento, etc.\n- Verifique se todas as forças ou fatores relevantes foram considerados\n\n### 3. Montar as Equações\n- Escreva as equações fundamentais que regem o problema\n- Substitua os valores conhecidos nas equações\n- Verifique se o número de equações é suficiente para resolver o sistema\n\n### 4. Analisar a Situação de Resultado Indeterminado\nUm resultado \"indeterminado\" ocorre quando:\n- Há mais incógnitas que equações independentes\n- As equações são dependentes (uma é múltipla da outra)\n- Faltam informações essenciais para resolver o problema\n- As condições fornecidas levam a uma contradição física\n\n### 5. Estratégias para Resolver Situações Indeterminadas\na) **Verificar se há dados faltantes**:\n   - Releia o enunciado para garantir que não omitiu informações\n   - Considere se há valores padrão que poderiam ser assumidos (como g = 9,8 m/s²)\n\nb) **Expressar o resultado em função de parâmetros desconhecidos**:\n   - Deixe as incógnitas como variáveis na resposta final\n   - Exemplo: \"A velocidade depende do valor da força F, que não foi fornecida\"\n\nc) **Analisar as limitações físicas do problema**:\n   - Determine o intervalo de valores possíveis para a resposta\n   - Exemplo: \"A aceleração deve estar entre 0 e 10 m/s²\"\n\nd) **Revisar as suposições iniciais**:\n   - Verifique se todas as forças foram consideradas\n   - Avalie se o modelo físico escolhido é adequado\n\n### 6. Formular a Resposta\n- Seja honesto sobre a indeterminação\n- Explique claramente por que o resultado não pode ser determinado com os dados fornecidos\n- Indique que informações adicionais seriam necessárias\n- Se possível, forneça uma expressão geral que relaciona as variáveis\n\n## Exemplo Prático\n\n**Problema:** Um objeto está em movimento retilíneo sob ação de uma força. Determine sua aceleração.\n\n**Análise:**\n- Sabemos que F = ma (Segunda Lei de Newton)\n- Temos a massa (m) mas não a força (F)\n- Com apenas uma equação e duas incógnitas (F e a), o problema é indeterminado\n\n**Resposta:**\n\"O problema é indeterminado porque falta o valor da força atuando sobre o objeto. A aceleração pode ser calculada quando a força for conhecida, usando a relação a = F/m.\"\n\nLembre-se: na física, assim como na vida, às vezes não temos informações suficientes para obter uma resposta numérica precisa. Nesses casos, a honestidade científica é mais importante do que adivinhar!",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782300636,
+  "id": "202606241930211e2daee648d24baa",
+  "model": "glm-4-plus",
+  "object": "chat.completion",
+  "request_id": "202606241930211e2daee648d24baa",
+  "usage": {
+    "completion_tokens": 803,
+    "prompt_tokens": 83,
+    "total_tokens": 886
+  }
+}
