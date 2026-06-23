@@ -524,3 +524,74 @@ Respostas Enviadas: ['4.69', '75.57']
 Respostas Corretas: {'Answer1': 4.6939, 'Answer2': 75.5714}
 Resultado: CORRETO!
 Metodo: calculo_direto
+
+============================================================
+Data: 23/06/2026 16:16:56
+URL: https://thephysicsaviary.com/Physics/APPrograms/StaticEq1/
+Simulador: Physics Aviary
+Enunciado: Find the tension in the two ropes that are holding the object in place.
+
+Rope 1 makes an angle of with respect to the vertical as shown in the picture and rope 2 is pulling horizontally
+Variaveis JS: {}
+Campos: ['Tension Rope 1 (N):', 'Tension Rope 2 (N):']
+Calculos:
+Para resolver este problema, precisamos analisar as forças atuantes no objeto em equilíbrio. As forças são:
+1. Peso (W) = m * g = 2.2 kg * 9.8 m/s² = 21.56 N, para baixo
+2. Tensão na corda 1 (T1), com componente vertical (T1 * cos(28°)) e horizontal (T1 * sin(28°))
+3. Tensão na corda 2 (T2), horizontalmente para a esquerda
+
+Como o objeto está em equilíbrio, a soma das forças na horizontal e na vertical é zero:
+
+Na vertical: T1 * cos(28°) - W = 0
+T1 * cos(28°) = 21.56 N
+T1 = 21.56 / cos(28°)
+T1 = 21.56 / 0.8829
+T1 = 24.42 N
+
+Na horizontal: T2 - T1 * sin(28°) = 0
+T2 = T1 * sin(28°)
+T2 = 24.42 * 0.4695
+T2 = 11.47 N
+Respostas Enviadas: ['24.42', '11.47']
+Respostas Corretas: {'Answer1': 24.5563, 'Answer2': 11.7549}
+Resultado: CORRETO!
+Metodo: ia
+
+============================================================
+Data: 23/06/2026 16:34:04
+URL: https://thephysicsaviary.com/Physics/APPrograms/StaticEq3/
+Simulador: Physics Aviary
+Enunciado: Find the tension in the two ropes that are holding the object in place.
+
+The angles of the rope with respect to the vertical are shown in the picture
+Variaveis JS: {}
+Campos: ['Tension Rope 1 (N):', 'Tension Rope 2 (N):']
+Calculos:
+Para resolver este problema, precisamos equilibrar as forças atuantes no objeto. O objeto está em repouso, então a soma das forças na horizontal e vertical é zero.
+
+Força gravitacional: Fg = m * g = 3.2 * 9.81 = 31.392 N (para baixo)
+
+Equilíbrio vertical:
+T₁ * cos(θ₁) + T₂ * cos(θ₂) = Fg
+T₁ * cos(54.0°) + T₂ * cos(26.0°) = 31.392
+T₁ * 0.5878 + T₂ * 0.8988 = 31.392
+
+Equilíbrio horizontal:
+T₁ * sin(θ₁) = T₂ * sin(θ₂)
+T₁ * sin(54.0°) = T₂ * sin(26.0°)
+T₁ * 0.8090 = T₂ * 0.4384
+T₁ = T₂ * 0.4384 / 0.8090
+T₁ = T₂ * 0.5419
+
+Substituindo T₁ na equação vertical:
+(T₂ * 0.5419) * 0.5878 + T₂ * 0.8988 = 31.392
+0.3185 * T₂ + 0.8988 * T₂ = 31.392
+1.2173 * T₂ = 31.392
+T₂ = 31.392 / 1.2173 = 25.79 N
+
+Agora encontramos T₁:
+T₁ = 25.79 * 0.5419 = 13.97 N
+Respostas Enviadas: ['13.97', '25.79']
+Respostas Corretas: {'Answer1': 13.9594, 'Answer2': 25.7622}
+Resultado: CORRETO!
+Metodo: ia

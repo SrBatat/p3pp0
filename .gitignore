@@ -30,25 +30,75 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# ==========================================
+# ENV FILES — NUNCA subir pro GitHub
+# ==========================================
+.env
+.env.*
+!.env.example
 
 # vercel
 .vercel
 
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-local-*
-.claude
-.z-ai-config
+
+# ==========================================
+# BANCO DE DADOS LOCAL
+# ==========================================
+db/
+*.db
+*.sqlite
+
+# ==========================================
+# LOGS
+# ==========================================
 *.log
 dev.log
-dev.out.log
-test
-prompt
-
 server.log
-# Skills directory
-/skills/
+dev.out.log
+
+# ==========================================
+# ARQUIVOS TEMPORÁRIOS / DOWNLOADS DO BOT
+# ==========================================
+download/
+upload/
+_error_analysis.json
+_chat_*.json
+_vlm_*.json
+_summary_*.json
+_page_*.json
+solve_result.json
+test_solve.json
+solver.log
+
+# ==========================================
+# JSONs DE TESTE / SCRAPING
+# ==========================================
+const_acc.json
+curriculum.json
+gas_giant.json
+gas_giant_js.json
+incline.json
+physics_find.json
+physics_js.json
+physics_page.json
+physics_programs.json
+sim_urls.json
+sim_search.json
+test_*.json
+
+# ==========================================
+# SCRIPTS / INFRA INTERNA
+# ==========================================
+.zscripts/
+.claude
+.z-ai-config
+skills/
+worklog.md
+
+# ==========================================
+# CADDY (infra local, não precisa subir)
+# ==========================================
+Caddyfile
