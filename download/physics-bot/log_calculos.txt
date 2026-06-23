@@ -88,3 +88,39 @@ Respostas Enviadas: ['90.33', '6144', '1.80e+26']
 Respostas Corretas: {'Answer1': 90.3273, 'Answer2': 6144.4867, 'Answer3': 1.8e+26}
 Resultado: CORRETO!
 Metodo: calculo_direto
+
+============================================================
+Data: 23/06/2026 13:39:58
+URL: https://thephysicsaviary.com/Physics/APPrograms/CarStoppingProblem/
+Simulador: Physics Aviary
+Enunciado: A car is traveling down a country road when the driver needs to suddenly stop the car. Based on the information below, how much time is required to stop the car and how much ground will the car cover while actively braking?
+Variaveis JS: {'StartingSpeed': 24.8, 'MassOfCar': 1256, 'CoefficientOfFriction': 0.36}
+Campos: ['Time (s):', 'Displacement (m):']
+Calculos:
+1. Velocidade inicial: v = 24.8 m/s
+2. Coeficiente de atrito: mu = 0.36
+3. Aceleracao de frenagem: a = mu * g = 0.36 * 9.8 = 3.5280 m/s^2
+4. Tempo para parar: t = v / a = 24.8 / 3.5280 = 7.0295 s
+5. Distancia percorrida: d = v^2/(2*a) = 24.8^2/(2*3.5280) = 87.1655 m
+Respostas Enviadas: ['7.03', '87.17']
+Respostas Corretas: {'Answer1': 7.0295, 'Answer2': 87.1655}
+Resultado: CORRETO!
+Metodo: calculo_direto
+
+============================================================
+Data: 23/06/2026 13:42:03
+URL: https://thephysicsaviary.com/Physics/APPrograms/CarStoppingProblem/
+Simulador: Physics Aviary
+Enunciado: A car is traveling down a country road when the driver needs to suddenly stop the car. Based on the information below, how much time is required to stop the car and how much ground will the car cover while actively braking?
+Variaveis JS: {'StartingSpeed': 27.5, 'MassOfCar': 1362, 'CoefficientOfFriction': 0.56}
+Campos: ['Time (s):', 'Displacement (m):']
+Calculos:
+1. Velocidade inicial: v = 27.5 m/s
+2. Coeficiente de atrito: mu = 0.56
+3. Aceleracao de frenagem: a = mu * g = 0.56 * 9.8 = 5.4880 m/s^2
+4. Tempo para parar: t = v / a = 27.5 / 5.4880 = 5.0109 s
+5. Distancia percorrida: d = v^2/(2*a) = 27.5^2/(2*5.4880) = 68.9003 m
+Respostas Enviadas: ['5.01', '68.90']
+Respostas Corretas: {'Answer1': 5.0109, 'Answer2': 68.9003}
+Resultado: CORRETO!
+Metodo: calculo_direto

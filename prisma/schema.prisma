@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model SolverSession {
+  id            String   @id @default(cuid())
+  url           String
+  userName      String   @default("Physics Bot")
+  status        String   @default("pending")  // pending, running, solved, error
+  simulatorType String?
+  enunciado     String?
+  variaveis     String?  // JSON
+  calculos      String?
+  respostas     String?  // JSON
+  respostasCorretas String? // JSON
+  resultado     String?
+  metodo        String?
+  screenshotUrl String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
