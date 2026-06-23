@@ -90,10 +90,15 @@ const ERROR_EXPLANATIONS: Record<string, { title: string; desc: string; fix: str
     desc: "Falha ao salvar/ler no banco. Verifique a conexão Prisma/Supabase.",
     fix: "Verifique DATABASE_URL no .env e se o banco está acessível.",
   },
-  E_FETCH_TIMEOUT: {
-    title: "Timeout na Requisição",
-    desc: "O browser (cliente) não recebeu resposta do servidor dentro do prazo. O solver demora 25-60s para executar.",
-    fix: "Isso é normal na primeira execução. O solver continuou rodando — aguarde e tente novamente.",
+  E_FETCH_ERROR: {
+    title: "Erro de Fetch / Gateway",
+    desc: "O gateway (Caddy) ou o servidor Next.js retornou erro 502/504. Isso acontece porque o solver demora 25-60s e o gateway corta a conexão antes.",
+    fix: "A arquitetura assíncrona (start + polling) já está ativa. Se persistir, verifique se o servidor está rodando.",
+  },
+  E_POLL_TIMEOUT: {
+    title: "Timeout no Polling",
+    desc: "O solver demorou mais de 240 segundos para completar. Isso é incomum e pode indicar que o Playwright travou.",
+    fix: "Tente novamente. Se persistir, o simulador pode ter uma animação muito longa.",
   },
 };
 
@@ -186,10 +191,10 @@ export default function Home() {
     };
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
-    setLoadingStep("Analisando simulador...");
+    setLoadingStep("Iniciando solver...");
 
-    // Simulate loading steps
     const steps = [
+      "Iniciando solver...",
       "Analisando simulador...",
       "Extraindo dados com Playwright...",
       "Calculando respostas...",
@@ -201,69 +206,82 @@ export default function Home() {
     const stepInterval = setInterval(() => {
       stepIdx = (stepIdx + 1) % steps.length;
       setLoadingStep(steps[stepIdx]);
-    }, 5000);
+    }, 4000);
 
     try {
-      // Extended timeout for the solver (120s)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000);
-
-      const res = await fetch("/api/solve", {
+      // Step 1: Start the job (returns immediately)
+      const startRes = await fetch("/api/solve/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url, userName, model: selectedModel }),
-        signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
-      clearInterval(stepInterval);
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || `HTTP ${res.status}: ${res.statusText}`);
+      if (!startRes.ok) {
+        throw new Error(`HTTP ${startRes.status}: ${startRes.statusText}`);
       }
 
-      const data: SolverResult = await res.json();
+      const startData = await startRes.json();
+      const jobId = startData.id;
 
-      if (data.success || data.respostas?.length > 0) {
-        const isCorrect = data.resultado?.includes("CORRETO");
-        const hasErrors = data.errors && data.errors.length > 0;
-
-        const assistantMsg: ChatMessage = {
-          id: `ai-${Date.now()}`,
-          role: "assistant",
-          content: isCorrect
-            ? `✅ **Resolvido com sucesso!** O simulador foi resolvido corretamente.`
-            : hasErrors
-            ? `⚠️ **Resolvido com avisos.** O resultado pode não estar correto.`
-            : `❌ **Resultado:** ${data.resultado}`,
-          result: data,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, assistantMsg]);
-        toast.success(isCorrect ? "Correto!" : "Verifique o resultado");
-      } else {
-        const errorCodes = data.errors || [];
-        const assistantMsg: ChatMessage = {
-          id: `ai-${Date.now()}`,
-          role: "assistant",
-          content: `❌ **Erro ao resolver o simulador.**`,
-          result: data,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, assistantMsg]);
-        toast.error("Erro ao resolver");
+      if (!jobId) {
+        throw new Error("No job ID returned from server");
       }
-    } catch (error: any) {
+
+      // Step 2: Poll for result every 3 seconds
+      const MAX_POLLS = 80; // 80 * 3s = 240s max
+      let pollCount = 0;
+
+      const pollForResult = async (): Promise<any> => {
+        pollCount++;
+        if (pollCount > MAX_POLLS) {
+          throw new Error("E_POLL_TIMEOUT");
+        }
+
+        await new Promise((r) => setTimeout(r, 3000));
+
+        const statusRes = await fetch(`/api/solve/status?id=${jobId}`);
+        if (!statusRes.ok) {
+          throw new Error(`Status check failed: HTTP ${statusRes.status}`);
+        }
+
+        const statusData = await statusRes.json();
+
+        if (statusData.complete) {
+          return statusData;
+        }
+
+        // Update loading step with progress
+        setLoadingStep(`Aguardando solver... (${pollCount * 3}s)`);
+
+        return pollForResult();
+      };
+
+      const data = await pollForResult();
       clearInterval(stepInterval);
 
-      const isTimeout = error.name === "AbortError";
-      const errorCode = isTimeout ? "E_FETCH_TIMEOUT" : "E_UNKNOWN";
+      const isCorrect = data.resultado?.includes("CORRETO");
 
       const assistantMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         role: "assistant",
-        content: `❌ **Erro de conexão.**`,
+        content: isCorrect
+          ? `✅ **Resolvido com sucesso!** O simulador foi resolvido corretamente.`
+          : `❌ **Resultado:** ${data.resultado || "Incorreto"}`,
+        result: data,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, assistantMsg]);
+      toast.success(isCorrect ? "Correto!" : "Verifique o resultado");
+    } catch (error: any) {
+      clearInterval(stepInterval);
+
+      const isTimeout = error.message?.includes("E_POLL_TIMEOUT");
+      const errorCode = isTimeout ? "E_POLL_TIMEOUT" : "E_FETCH_ERROR";
+
+      const assistantMsg: ChatMessage = {
+        id: `ai-${Date.now()}`,
+        role: "assistant",
+        content: `❌ **Erro ao resolver o simulador.**`,
         result: {
           success: false,
           simulatorType: "",
@@ -277,14 +295,14 @@ export default function Home() {
           screenshotUrl: null,
           errors: [errorCode],
           technicalDetail: isTimeout
-            ? "Fetch abortado após 120s. O solver pode ainda estar rodando no servidor."
+            ? "Solver excedeu 240s de espera. O processo pode ter travado."
             : error.message,
           error: error.message,
         },
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, assistantMsg]);
-      toast.error("Erro de conexão — veja detalhes técnicos");
+      toast.error("Erro — veja detalhes técnicos");
     } finally {
       setIsLoading(false);
       setLoadingStep("");

@@ -484,3 +484,43 @@ Respostas Enviadas: ['5.63', '10.43']
 Respostas Corretas: {'Answer1': 5.6288, 'Answer2': 10.4279}
 Resultado: CORRETO!
 Metodo: calculo_direto
+
+============================================================
+Data: 23/06/2026 15:36:59
+URL: https://thephysicsaviary.com/Physics/APPrograms/NewtonsLawSystemInclinewFriction/
+Simulador: Physics Aviary
+Enunciado: Determine the acceleration in the system depicted below. Enter the acceleration as a negative number if the object slides down the incline and as a positive number if it goes up the incline (The friction for the system cannot be neglected)
+Variaveis JS: {'coefficientoffriction': 0.1, 'Acceleration': 0, 'AngleOfIncline': 33, 'AngleinRad': 0.5759586531581288, 'MassHanging': 2.8, 'SlidingMass': 1.9, 'Ff': 1.5616045975143797, 'Fgx': 10.141178831979804, 'TotalForcex': 11.702783429494184}
+Campos: ['Acceleration (m/s/s):', 'Tension (N):']
+Calculos:
+1. Angulo: theta = 33 graus
+2. Massa deslizante: m1 = 1.9 kg
+3. Massa pendurada: m2 = 2.8 kg
+4. Coeficiente de atrito: mu = 0.1
+5. Fgx = m1*g*sin(theta) = 10.1412 N
+6. Ff = mu*m1*g*cos(theta) = 1.5616 N
+7. F_hang = m2*g = 27.4400 N
+8. Aceleracao: a = 3.3483 m/s^2
+9. Tensao: T = 18.0646 N
+Respostas Enviadas: ['3.35', '18.06']
+Respostas Corretas: {'Answer1': 3.3483, 'Answer2': 18.0646}
+Resultado: CORRETO!
+Metodo: calculo_direto
+
+============================================================
+Data: 23/06/2026 15:42:07
+URL: https://thephysicsaviary.com/Physics/APPrograms/CarStoppingProblem/
+Simulador: Physics Aviary
+Enunciado: A car is traveling down a country road when the driver needs to suddenly stop the car. Based on the information below, how much time is required to stop the car and how much ground will the car cover while actively braking?
+Variaveis JS: {'StartingSpeed': 32.2, 'MassOfCar': 599, 'CoefficientOfFriction': 0.7}
+Campos: ['Time (s):', 'Displacement (m):']
+Calculos:
+1. Velocidade inicial: v = 32.2 m/s
+2. Coeficiente de atrito: mu = 0.7
+3. Aceleracao de frenagem: a = mu * g = 0.7 * 9.8 = 6.8600 m/s^2
+4. Tempo para parar: t = v / a = 32.2 / 6.8600 = 4.6939 s
+5. Distancia percorrida: d = v^2/(2*a) = 32.2^2/(2*6.8600) = 75.5714 m
+Respostas Enviadas: ['4.69', '75.57']
+Respostas Corretas: {'Answer1': 4.6939, 'Answer2': 75.5714}
+Resultado: CORRETO!
+Metodo: calculo_direto
