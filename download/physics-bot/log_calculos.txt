@@ -124,3 +124,363 @@ Respostas Enviadas: ['5.01', '68.90']
 Respostas Corretas: {'Answer1': 5.0109, 'Answer2': 68.9003}
 Resultado: CORRETO!
 Metodo: calculo_direto
+
+============================================================
+Data: 23/06/2026 13:46:53
+URL: https://thephysicsaviary.com/Physics/APPrograms/FrictionToProjectileProblem/
+Simulador: Physics Aviary
+Enunciado: Find the speed with which the box comes off the table and then predict how far it will travel horizontally before striking the ground
+Variaveis JS: {'CoefficientOfFriction': 0.37}
+Campos: ['Launch Speed (m/s):', 'Time of Flight (s):', 'Horizontal Distance (m):']
+Calculos:
+Primeiro, vamos converter todas as unidades para SI:
+m = 421 g = 0.421 kg
+d_tabela = 93 cm = 0.93 m
+h_queda = 1010 mm = 1.01 m
+
+A velocidade inicial fornecida é 3.52 m/s, mas precisamos verificar se há perda de energia devido ao atrito na mesa.
+
+O trabalho realizado pelo atrito é:
+W_atrito = -μ * m * g * d_tabela
+W_atrito = -0.37 * 0.421 * 9.8 * 0.93 = -1.42 J
+
+A energia cinética inicial:
+EC_inicial = 0.5 * m * v_inicial^2
+EC_inicial = 0.5 * 0.421 * (3.52)^2 = 2.61 J
+
+A energia cinética quando a caixa sai da mesa:
+EC_final = EC_inicial + W_atrito
+EC_final = 2.61 - 1.42 = 1.19 J
+
+A velocidade de lançamento:
+v_lançamento = sqrt(2 * EC_final / m)
+v_lançamento = sqrt(2 * 1.19 / 0.421) = 2.38 m/s
+
+Tempo de voo:
+Usando a equação do movimento vertical: h = 0.5 * g * t^2
+t = sqrt(2 * h / g)
+t = sqrt(2 * 1.01 / 9.8) = 0.45 s
+
+Distância horizontal:
+d_horizontal = v_lançamento * t
+d_horizontal = 2.38 * 0.45 = 1.07 m
+Respostas Enviadas: ['2.38', '0.45', '1.07']
+Respostas Corretas: {'Answer1': 2.3788, 'Answer2': 0.454, 'Answer3': 1.08}
+Resultado: CORRETO!
+Metodo: ia
+
+============================================================
+Data: 23/06/2026 13:52:57
+URL: https://thephysicsaviary.com/Physics/APPrograms/FrictionToProjectileProblem/
+Simulador: Physics Aviary
+Enunciado: Find the speed with which the box comes off the table and then predict how far it will travel horizontally before striking the ground
+Variaveis JS: {'CoefficientOfFriction': 0.17}
+Campos: ['Launch Speed (m/s):', 'Time of Flight (s):', 'Horizontal Distance (m):']
+Calculos:
+1. Calcular a velocidade de lançamento (já fornecida como 4.22 m/s)
+   v₀ = 4.22 m/s
+
+2. Calcular o tempo de voo:
+   Usando a equação de queda livre: h = (1/2)gt²
+   0.968 = (1/2)(9.8)t²
+   t² = (2 × 0.968)/9.8
+   t² = 1.936/9.8
+   t = √(0.19755)
+   t = 0.44 s
+
+3. Calcular a distância horizontal:
+   d = v₀ × t
+   d = 4.22 × 0.44
+   d = 1.8568 m
+Respostas Enviadas: ['4.22', '0.44', '1.86']
+Respostas Corretas: {'Answer1': 4.0048, 'Answer2': 0.4445, 'Answer3': 1.78}
+Resultado: INCORRETO
+Metodo: ia
+
+============================================================
+Data: 23/06/2026 13:57:26
+URL: https://thephysicsaviary.com/Physics/APPrograms/CarStoppingProblem/
+Simulador: Physics Aviary
+Enunciado: A car is traveling down a country road when the driver needs to suddenly stop the car. Based on the information below, how much time is required to stop the car and how much ground will the car cover while actively braking?
+Variaveis JS: {'StartingSpeed': 31.9, 'MassOfCar': 1393, 'CoefficientOfFriction': 0.6}
+Campos: ['Time (s):', 'Displacement (m):']
+Calculos:
+1. Velocidade inicial: v = 31.9 m/s
+2. Coeficiente de atrito: mu = 0.6
+3. Aceleracao de frenagem: a = mu * g = 0.6 * 9.8 = 5.8800 m/s^2
+4. Tempo para parar: t = v / a = 31.9 / 5.8800 = 5.4252 s
+5. Distancia percorrida: d = v^2/(2*a) = 31.9^2/(2*5.8800) = 86.5315 m
+Respostas Enviadas: ['5.43', '86.53']
+Respostas Corretas: {'Answer1': 5.4252, 'Answer2': 86.5315}
+Resultado: CORRETO!
+Metodo: calculo_direto
+
+============================================================
+Data: 23/06/2026 14:05:01
+URL: https://thephysicsaviary.com/Physics/APPrograms/CarStoppingProblem/
+Simulador: Physics Aviary
+Enunciado: A car is traveling down a country road when the driver needs to suddenly stop the car. Based on the information below, how much time is required to stop the car and how much ground will the car cover while actively braking?
+Variaveis JS: {'StartingSpeed': 22.1, 'MassOfCar': 1412, 'CoefficientOfFriction': 0.25}
+Campos: ['Time (s):', 'Displacement (m):']
+Calculos:
+1. Velocidade inicial: v = 22.1 m/s
+2. Coeficiente de atrito: mu = 0.25
+3. Aceleracao de frenagem: a = mu * g = 0.25 * 9.8 = 2.4500 m/s^2
+4. Tempo para parar: t = v / a = 22.1 / 2.4500 = 9.0204 s
+5. Distancia percorrida: d = v^2/(2*a) = 22.1^2/(2*2.4500) = 99.6755 m
+Respostas Enviadas: ['9.02', '99.68']
+Respostas Corretas: {'Answer1': 9.0204, 'Answer2': 99.6755}
+Resultado: CORRETO!
+Metodo: calculo_direto
+
+============================================================
+Data: 23/06/2026 14:07:20
+URL: https://thephysicsaviary.com/Physics/APPrograms/FrictionToProjectileProblem/
+Simulador: Physics Aviary
+Enunciado: Find the speed with which the box comes off the table and then predict how far it will travel horizontally before striking the ground
+Variaveis JS: {'CoefficientOfFriction': 0.33}
+Campos: ['Launch Speed (m/s):', 'Time of Flight (s):', 'Horizontal Distance (m):']
+Calculos:
+Para encontrar a velocidade com que a caixa sai da mesa (Launch Speed), já temos o valor fornecido: v0 = 3.56 m/s.
+
+Para calcular o tempo de voo (Time of Flight), usamos a equação de movimento vertical em queda livre:
+h = (1/2) * g * t²
+Onde h é a altura da mesa (1.164 m), g é a aceleração da gravidade (9.81 m/s²) e t é o tempo de voo.
+
+Rearranjando a equação:
+t = √(2h/g)
+t = √(2 * 1.164 / 9.81)
+t = √(2.328 / 9.81)
+t = √0.2373
+t ≈ 0.487 s
+
+Para calcular a distância horizontal (Horizontal Distance), usamos a equação:
+d_horizontal = v0 * t
+d_horizontal = 3.56 * 0.487
+d_horizontal ≈ 1.73 m
+Respostas Enviadas: ['3.56', '0.49', '1.73']
+Respostas Corretas: {'Answer1': 2.7493, 'Answer2': 0.4874, 'Answer3': 1.34}
+Resultado: INCORRETO
+Metodo: ia
+
+============================================================
+Data: 23/06/2026 14:11:20
+URL: https://thephysicsaviary.com/Physics/APPrograms/FrictionToProjectileProblem/
+Simulador: Physics Aviary
+Enunciado: Find the speed with which the box comes off the table and then predict how far it will travel horizontally before striking the ground
+Variaveis JS: {'CoefficientOfFriction': 0.4, 'StartSpeed': 3.257819699607215, 'MassOfBox': 0.732, 'HeightOfLabTable': 0.907, 'TableDistance': 0.55, 'GravitationalField': 9.8, 'HorizontalRange': 0, 'HeightOfLabTablemm': 907, 'MassOfBoxg': 732, 'TableDistancecm': 55}
+Campos: ['Launch Speed (m/s):', 'Time of Flight (s):', 'Horizontal Distance (m):']
+Calculos:
+1. Velocidade inicial: v0 = 3.2578 m/s
+2. Atrito na mesa: mu = 0.4
+3. Distancia na mesa: d = 0.55 m
+4. Velocidade na borda: v = sqrt(v0^2 - 2*mu*g*d) = 2.5103 m/s
+5. Altura da mesa: h = 0.907 m
+6. Tempo de voo: t = sqrt(2h/g) = 0.4302 s
+7. Distancia horizontal: d = v*t = 1.0800 m
+Respostas Enviadas: ['2.51', '0.43', '1.08']
+Respostas Corretas: {'Answer1': 2.5103, 'Answer2': 0.4302, 'Answer3': 1.08}
+Resultado: CORRETO!
+Metodo: calculo_direto
+
+============================================================
+Data: 23/06/2026 14:11:58
+URL: https://thephysicsaviary.com/Physics/APPrograms/NewtonsLawSystemInclinewFriction/
+Simulador: Physics Aviary
+Enunciado: Determine the acceleration in the system depicted below. Enter the acceleration as a negative number if the object slides down the incline and as a positive number if it goes up the incline (The friction for the system cannot be neglected)
+Variaveis JS: {'coefficientoffriction': 0.12, 'Acceleration': 0, 'AngleOfIncline': 20.5, 'AngleinRad': 0.3577924966588375, 'MassHanging': 1.1, 'SlidingMass': 0.8, 'Ff': 0.8812211956448925, 'Fgx': 2.7456258690742246, 'TotalForcex': 3.626847064719117}
+Campos: ['Acceleration (m/s/s):', 'Tension (N):']
+Calculos:
+1. Angulo: theta = 20.5 graus
+2. Massa deslizante: m1 = 0.8 kg
+3. Massa pendurada: m2 = 1.1 kg
+4. Coeficiente de atrito: mu = 0.12
+5. Fgx = m1*g*sin(theta) = 2.7456 N
+6. Ff = mu*m1*g*cos(theta) = 0.8812 N
+7. F_hang = m2*g = 10.7800 N
+8. Aceleracao: a = 3.7648 m/s^2
+9. Tensao: T = 6.6387 N
+Respostas Enviadas: ['3.76', '6.64']
+Respostas Corretas: {'Answer1': 3.7648, 'Answer2': 6.6387}
+Resultado: CORRETO!
+Metodo: calculo_direto
+
+============================================================
+Data: 23/06/2026 14:12:56
+URL: https://thephysicsaviary.com/Physics/APPrograms/UniversalGravityProblemOneStep/
+Simulador: Physics Aviary
+Enunciado: Determine the separation between the centers of the two objects and then calculate the force of gravity acting between the two objects shown below
+Variaveis JS: {'mass1': 578805.102637558, 'mass2': 1274643.818666742, 'Gc': 6.67e-11, 'Radius1m': 5.690199495551662, 'Radius2m': 6.329552352095484, 'XObject2': 515.1023317514611}
+Campos: ['Distance Apart (m):', 'Force Gravity (N):']
+Calculos:
+1. Calcular a distância entre os centros dos objetos:
+   - Distância = raio1 + raio2 + distância entre as superfícies
+   - Distância = 5.69 + 6.33 + 20 = 32.02 m
+
+2. Calcular a força de gravidade usando a Lei da Gravitação Universal:
+   - F = G * (m1 * m2) / d²
+   - F = 6.67e-11 * (578805.102637558 * 1274643.818666742) / (32.02)²
+   - F = 6.67e-11 * (7.38e11) / 1025.28
+   - F = 49.3046 / 1025.28
+   - F = 0.0481 N
+Respostas Enviadas: ['32.02', '0.05']
+Respostas Corretas: {}
+Resultado: INCORRETO
+Metodo: ia
+
+============================================================
+Data: 23/06/2026 14:14:35
+URL: https://thephysicsaviary.com/Physics/APPrograms/UniversalGravityProblemOneStep/
+Simulador: Physics Aviary
+Enunciado: Determine the separation between the centers of the two objects and then calculate the force of gravity acting between the two objects shown below
+Variaveis JS: {'mass1': 2201401.3742820425, 'mass2': 906384.9014693429, 'Gc': 6.67e-11, 'Radius1m': 5.795384922823878, 'Radius2m': 6.225064706004203, 'XObject2': 351.7062879103048}
+Campos: ['Distance Apart (m):', 'Force Gravity (N):']
+Calculos:
+Para calcular a distância entre os centros dos dois objetos, precisamos somar os raios de cada objeto e adicionar a distância entre suas bordas mais próximas. A distância entre as bordas mais próximas é dada por XObject2 = 351.7062879103048 m.
+
+Distância entre centros = Raio1 + Raio2 + XObject2
+Distância entre centros = 5.795384922823878 + 6.225064706004203 + 351.7062879103048
+Distância entre centros = 363.7267375431329 m
+
+Para calcular a força da gravidade entre os dois objetos, usamos a lei da gravitação universal de Newton:
+
+F = G * (m1 * m2) / r²
+Onde:
+- G = 6.67e-11 (constante gravitacional)
+- m1 = 2201401.3742820425 kg (massa do objeto 1)
+- m2 = 906384.9014693429 kg (massa do objeto 2)
+- r = 363.7267375431329 m (distância entre os centros)
+
+F = 6.67e-11 * (2201401.3742820425 * 906384.9014693429) / (363.7267375431329)²
+F = 6.67e-11 * (1.996e12) / (132297.2)
+F = 1.332e-2 / 132297.2
+F = 1.007e-7 N
+Respostas Enviadas: ['363.73', '1.01e-7']
+Respostas Corretas: {}
+Resultado: INCORRETO
+Metodo: ia
+
+============================================================
+Data: 23/06/2026 14:16:23
+URL: https://thephysicsaviary.com/Physics/APPrograms/UniversalGravityProblemOneStep/
+Simulador: Physics Aviary
+Enunciado: Determine the separation between the centers of the two objects and then calculate the force of gravity acting between the two objects shown below
+Variaveis JS: {'mass1': 11673653.243712736, 'mass2': 6448850.275710061, 'Gc': 6.67e-11, 'Radius1m': 7.07480513526844, 'Radius2m': 5.593111222739906, 'XObject2': 394.10633381397366}
+Campos: ['Distance Apart (m):', 'Force Gravity (N):']
+Calculos:
+Para calcular a força de gravidade entre os dois objetos, precisamos da distância entre seus centros. Pelos dados fornecidos, temos:
+- Posição do centro do Objeto 1: ~5 m
+- Posição do centro do Objeto 2: ~25 m
+- Distância entre centros (d): 25 m - 5 m = 20 m
+
+Agora, usando a lei da gravitação universal de Newton:
+F = G * (m1 * m2) / d²
+
+Onde:
+- G = 6.67e-11 (constante gravitacional)
+- m1 = 1.17e+7 kg (massa do Objeto 1)
+- m2 = 6.45e+6 kg (massa do Objeto 2)
+- d = 20 m (distância entre os centros)
+
+Substituindo os valores:
+F = 6.67e-11 * (1.17e+7 * 6.45e+6) / 20²
+F = 6.67e-11 * (7.5465e+13) / 400
+F = 5.0284555e3 / 400
+F = 12.57113875 N
+
+Arredondando para 2 casas decimais:
+Distância: 20.00 m
+Força: 12.57 N
+Respostas Enviadas: ['20', '12.57']
+Respostas Corretas: {}
+Resultado: INCORRETO
+Metodo: ia
+
+============================================================
+Data: 23/06/2026 14:17:40
+URL: https://thephysicsaviary.com/Physics/APPrograms/UniversalGravityProblemOneStep/
+Simulador: Physics Aviary
+Enunciado: Determine the separation between the centers of the two objects and then calculate the force of gravity acting between the two objects shown below
+Variaveis JS: {'mass1': 406106.6769830426, 'mass2': 886450.3514311874, 'Gc': 6.67e-11, 'Radius1m': 5.056268008633394, 'Radius2m': 4.279575386142171, 'XObject2': 395.0842450494496}
+Campos: ['Distance Apart (m):', 'Force Gravity (N):']
+Calculos:
+1. Primeiro, calculamos a distância entre os centros dos dois objetos:
+   - A distância total entre os centros é a soma dos raios dos dois objetos mais a distância entre suas superfícies.
+   - Distância entre centros = r₁ + r₂ + distância entre superfícies
+   - Distância entre centros = 5.06 + 4.28 + 395.08
+   - Distância entre centros = 404.42 m
+
+2. Agora, calculamos a força de gravidade usando a lei da gravitação universal de Newton:
+   - F = G * (m₁ * m₂) / r²
+   - F = 6.67e-11 * (4.06e+5 * 8.86e+5) / (404.42)²
+   - F = 6.67e-11 * (3.597e+11) / 163555.1364
+   - F = 2.398e+1 / 163555.1364
+   - F = 0.0001467 N
+   - Arredondando para 2 casas decimais: F = 0.00 N
+Respostas Enviadas: ['404.42', '0.00']
+Respostas Corretas: {}
+Resultado: INCORRETO
+Metodo: ia
+
+============================================================
+Data: 23/06/2026 14:19:00
+URL: https://thephysicsaviary.com/Physics/APPrograms/UniversalGravityProblemOneStep/
+Simulador: Physics Aviary
+Enunciado: Determine the separation between the centers of the two objects and then calculate the force of gravity acting between the two objects shown below
+Variaveis JS: {'mass1': 21394551.789683536, 'mass2': 2253594.6633180436, 'Gc': 6.67e-11, 'Radius1m': 8.657914319527269, 'Radius2m': 8.951764415140204, 'XObject2': 632.7397907314507}
+Campos: ['Distance Apart (m):', 'Force Gravity (N):']
+Calculos:
+Primeiro, calculamos a distância entre os centros dos objetos:
+d = r1 + r2 = 8.66 + 8.95 = 17.61 m
+
+Agora, calculamos a força de gravidade usando a fórmula de Newton:
+F = G * (m1 * m2) / d^2
+F = 6.67e-11 * (2.14e7 * 2.25e6) / (17.61)^2
+F = 6.67e-11 * (4.815e13) / 310.1121
+F = 3.207e3 / 310.1121
+F = 10.34 N
+Respostas Enviadas: ['17.61', '10.34']
+Respostas Corretas: {}
+Resultado: INCORRETO
+Metodo: ia
+
+============================================================
+Data: 23/06/2026 14:20:42
+URL: https://thephysicsaviary.com/Physics/APPrograms/UniversalGravityProblemOneStep/
+Simulador: Physics Aviary
+Enunciado: Determine the separation between the centers of the two objects and then calculate the force of gravity acting between the two objects shown below
+Variaveis JS: {'mass1': 1819120.620847568, 'mass2': 851387.3547017887, 'Gc': 6.67e-11, 'Radius1m': 8.334966808673197, 'Radius2m': 4.222389316374313, 'Radius1': 83.34966808673198, 'Radius2': 42.22389316374313, 'XObject1': 247.3521171047396, 'XObject2': 525.867050721974, 'YObject': 475}
+Campos: ['Distance Apart (m):', 'Force Gravity (N):']
+Calculos:
+1. Massa 1: m1 = 1.82e+06 kg
+2. Massa 2: m2 = 8.51e+05 kg
+3. Posicao objeto 1: x1 = 247.35 px
+4. Posicao objeto 2: x2 = 525.87 px
+5. Distancia entre centros: rad = (x2-x1)/10 = 27.8515 m
+6. Forca gravitacional: F = G*m1*m2/rad^2 = 1.3317e-01 N
+Respostas Enviadas: ['27.85', '1.33e-01']
+Respostas Corretas: {}
+Resultado: CORRETO!
+Metodo: calculo_direto
+
+============================================================
+Data: 23/06/2026 14:21:22
+URL: https://thephysicsaviary.com/Physics/APPrograms/NewtonsLawSystemInclinewFriction/
+Simulador: Physics Aviary
+Enunciado: Determine the acceleration in the system depicted below. Enter the acceleration as a negative number if the object slides down the incline and as a positive number if it goes up the incline (The friction for the system cannot be neglected)
+Variaveis JS: {'coefficientoffriction': 0.11, 'Acceleration': 0, 'AngleOfIncline': 30.9, 'AngleinRad': 0.5393067388662478, 'MassHanging': 2.5, 'SlidingMass': 0.9, 'Ff': 0.83249457153308, 'Fgx': 4.529433843153059, 'TotalForcex': 5.3619284146861395}
+Campos: ['Acceleration (m/s/s):', 'Tension (N):']
+Calculos:
+1. Angulo: theta = 30.9 graus
+2. Massa deslizante: m1 = 0.9 kg
+3. Massa pendurada: m2 = 2.5 kg
+4. Coeficiente de atrito: mu = 0.11
+5. Fgx = m1*g*sin(theta) = 4.5294 N
+6. Ff = mu*m1*g*cos(theta) = 0.8325 N
+7. F_hang = m2*g = 24.5000 N
+8. Aceleracao: a = 5.6288 m/s^2
+9. Tensao: T = 10.4279 N
+Respostas Enviadas: ['5.63', '10.43']
+Respostas Corretas: {'Answer1': 5.6288, 'Answer2': 10.4279}
+Resultado: CORRETO!
+Metodo: calculo_direto

@@ -1,0 +1,22 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "CONTA: \nPrimeiro, calculamos a distância entre os centros dos objetos:\nd = r1 + r2 = 8.66 + 8.95 = 17.61 m\n\nAgora, calculamos a força de gravidade usando a fórmula de Newton:\nF = G * (m1 * m2) / d^2\nF = 6.67e-11 * (2.14e7 * 2.25e6) / (17.61)^2\nF = 6.67e-11 * (4.815e13) / 310.1121\nF = 3.207e3 / 310.1121\nF = 10.34 N\n\nRESPOSTA: 17.61;10.34",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782224317,
+  "id": "202606232218355c71dffeede343d8",
+  "model": "glm-4-plus",
+  "object": "chat.completion",
+  "request_id": "202606232218355c71dffeede343d8",
+  "usage": {
+    "completion_tokens": 171,
+    "prompt_tokens": 809,
+    "total_tokens": 980
+  }
+}

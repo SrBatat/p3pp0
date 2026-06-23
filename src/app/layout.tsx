@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PhysicsSolver AI - Resolva Simuladores com IA",
+  title: "p3pp4 — AI Physics Solver",
   description:
-    "Resolva simuladores de física automaticamente com IA. Cole o link, receba a resposta com cálculos detalhados.",
+    "Resolva simuladores de física automaticamente com IA. Cole o link, receba a resposta.",
 };
 
 export default function RootLayout({
@@ -25,12 +25,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
+    <html lang="pt-BR" className="dark" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
         {children}
-        <Toaster richColors position="top-right" />
+        <Toaster richColors position="top-right" theme="dark" />
       </body>
     </html>
   );

@@ -240,9 +240,129 @@ def calcular_direto_physics_aviary(variaveis, titulo=""):
         return resultado
 
     # --- Incline Problem ---
-    theta = variaveis.get("Angle") or variaveis.get("theta") or variaveis.get("InclineAngle")
-    if theta is not None and m is not None:
-        pass
+    theta = variaveis.get("Angle") or variaveis.get("theta") or variaveis.get("InclineAngle") or variaveis.get("AngleOfIncline")
+    mu_incline = variaveis.get("coefficientoffriction") or variaveis.get("CoefficientOfFriction") or variaveis.get("muK")
+    m_slide = variaveis.get("SlidingMass") or variaveis.get("Mass")
+    m_hang = variaveis.get("MassHanging")
+    g = 9.8
+
+    if theta is not None and mu_incline is not None and m_slide is not None and m_hang is not None:
+        import math as _math2
+        theta_rad = _math2.radians(theta) if theta > 3.14 else theta  # se > pi, já é radianos
+        # Força gravitacional paralela ao plano
+        Fgx = m_slide * g * _math2.sin(theta_rad)
+        # Força de atrito
+        Fn = m_slide * g * _math2.cos(theta_rad)
+        Ff = mu_incline * Fn
+        # Força líquida (considerando a massa pendurada)
+        # Se a caixa desce o plano: F_liq = m_hang*g - Fgx + Ff (ou -Ff se sobe)
+        # Determinar direção: comparar Fgx com m_hang*g
+        F_hang = m_hang * g
+        if Fgx > F_hang:
+            # Caixa desce o plano, atrito sobe
+            F_liq = Fgx - F_hang - Ff
+        else:
+            # Massa pendurada puxa a caixa pra cima, atrito desce
+            F_liq = F_hang - Fgx - Ff
+        massa_total = m_slide + m_hang
+        aceleracao = F_liq / massa_total
+        # Tensão no fio
+        T = m_hang * (g - aceleracao) if F_hang > Fgx else m_hang * (g + aceleracao)
+        
+        # Verificar sinal da aceleração: negativa se desce o plano
+        if Fgx > F_hang:
+            aceleracao = -abs(aceleracao)
+        else:
+            aceleracao = abs(aceleracao)
+
+        resultado["respostas"] = [f"{aceleracao:.2f}", f"{abs(T):.2f}"]
+        resultado["formulas"] = [
+            f"Fgx = m*g*sin(theta) = {m_slide}*{g}*sin({theta}) = {Fgx:.4f} N",
+            f"Ff = mu*m*g*cos(theta) = {mu_incline}*{m_slide}*{g}*cos({theta}) = {Ff:.4f} N",
+            f"F_hang = m_hang*g = {m_hang}*{g} = {F_hang:.4f} N",
+            f"a = F_liq / (m1+m2) = {F_liq:.4f} / {massa_total} = {aceleracao:.4f} m/s^2",
+            f"T = {abs(T):.4f} N"
+        ]
+        resultado["passos"] = [
+            f"1. Angulo: theta = {theta} graus",
+            f"2. Massa deslizante: m1 = {m_slide} kg",
+            f"3. Massa pendurada: m2 = {m_hang} kg",
+            f"4. Coeficiente de atrito: mu = {mu_incline}",
+            f"5. Fgx = m1*g*sin(theta) = {Fgx:.4f} N",
+            f"6. Ff = mu*m1*g*cos(theta) = {Ff:.4f} N",
+            f"7. F_hang = m2*g = {F_hang:.4f} N",
+            f"8. Aceleracao: a = {aceleracao:.4f} m/s^2",
+            f"9. Tensao: T = {abs(T):.4f} N"
+        ]
+        return resultado
+
+    # --- Friction to Projectile Problem ---
+    StartSpeed = variaveis.get("StartSpeed")
+    HeightOfLabTable = variaveis.get("HeightOfLabTable")
+    TableDistance = variaveis.get("TableDistance")
+    CoF = variaveis.get("CoefficientOfFriction")
+    MassBox = variaveis.get("MassOfBox")
+    GravField = variaveis.get("GravitationalField") or 9.8
+
+    if CoF is not None and MassBox is not None and TableDistance is not None and HeightOfLabTable is not None:
+        import math as _math3
+        # Step 1: velocidade na borda da mesa (atrito desacelera)
+        # v^2 = v0^2 - 2*mu*g*d
+        v0_sq = StartSpeed**2 - 2 * CoF * GravField * TableDistance if StartSpeed else None
+        if v0_sq is not None and v0_sq > 0:
+            launch_speed = _math3.sqrt(v0_sq)
+        else:
+            launch_speed = 0
+
+        # Step 2: tempo de voo (queda livre)
+        t_flight = _math3.sqrt(2 * HeightOfLabTable / GravField)
+
+        # Step 3: distância horizontal
+        d_horizontal = launch_speed * t_flight
+
+        resultado["respostas"] = [f"{launch_speed:.2f}", f"{t_flight:.2f}", f"{d_horizontal:.2f}"]
+        resultado["formulas"] = [
+            f"v^2 = v0^2 - 2*mu*g*d = {StartSpeed}^2 - 2*{CoF}*{GravField}*{TableDistance} = {launch_speed:.4f} m/s",
+            f"t = sqrt(2*h/g) = sqrt(2*{HeightOfLabTable}/{GravField}) = {t_flight:.4f} s",
+            f"d = v*t = {launch_speed:.4f}*{t_flight:.4f} = {d_horizontal:.4f} m"
+        ]
+        resultado["passos"] = [
+            f"1. Velocidade inicial: v0 = {StartSpeed:.4f} m/s",
+            f"2. Atrito na mesa: mu = {CoF}",
+            f"3. Distancia na mesa: d = {TableDistance} m",
+            f"4. Velocidade na borda: v = sqrt(v0^2 - 2*mu*g*d) = {launch_speed:.4f} m/s",
+            f"5. Altura da mesa: h = {HeightOfLabTable} m",
+            f"6. Tempo de voo: t = sqrt(2h/g) = {t_flight:.4f} s",
+            f"7. Distancia horizontal: d = v*t = {d_horizontal:.4f} m"
+        ]
+        return resultado
+
+    # --- Universal Gravity Problem ---
+    m1 = variaveis.get("mass1")
+    m2 = variaveis.get("mass2")
+    Gc = variaveis.get("Gc") or 6.67e-11
+    x1 = variaveis.get("XObject1")
+    x2 = variaveis.get("XObject2")
+
+    if m1 is not None and m2 is not None and x1 is not None and x2 is not None:
+        # Formula exata do simulador: rad = (XObject2 - XObject1) / 10
+        rad = abs(x2 - x1) / 10.0
+        F_gravity = Gc * m1 * m2 / (rad ** 2)
+
+        resultado["respostas"] = [f"{rad:.2f}", f"{F_gravity:.2e}"]
+        resultado["formulas"] = [
+            f"rad = (x2 - x1) / 10 = ({x2:.2f} - {x1:.2f}) / 10 = {rad:.4f} m",
+            f"F = G*m1*m2/rad^2 = {Gc}*{m1:.2e}*{m2:.2e}/{rad:.4f}^2 = {F_gravity:.4e} N"
+        ]
+        resultado["passos"] = [
+            f"1. Massa 1: m1 = {m1:.2e} kg",
+            f"2. Massa 2: m2 = {m2:.2e} kg",
+            f"3. Posicao objeto 1: x1 = {x1:.2f} px",
+            f"4. Posicao objeto 2: x2 = {x2:.2f} px",
+            f"5. Distancia entre centros: rad = (x2-x1)/10 = {rad:.4f} m",
+            f"6. Forca gravitacional: F = G*m1*m2/rad^2 = {F_gravity:.4e} N"
+        ]
+        return resultado
 
     return resultado
 
@@ -292,6 +412,7 @@ def resolver_physics_aviary(pagina, url):
         "InitialVelocity", "FinalVelocity", "Angle", "InclineAngle",
         "Distance", "Time", "Mass", "Force", "AppliedForce",
         "CoefficientOfKineticFriction", "CoefficientOfStaticFriction",
+        "coefficientoffriction",  # Newton's Law incline uses lowercase
         "Acceleration", "Gravity", "Height", "Velocity",
         "SpringConstant", "Amplitude", "Frequency", "Period",
         "Wavelength", "Charge", "Voltage", "Current",
@@ -303,9 +424,20 @@ def resolver_physics_aviary(pagina, url):
         # Gas Giant specific
         "OrbitRadiusm", "OrbitRadiuspx", "MoonMass", "AngularSpeed",
         "PlanetSizepx", "PlanetSizem",
+        # Friction to Projectile specific
+        "StartSpeed", "MassOfBox", "HeightOfLabTable", "TableDistance",
+        "GravitationalField", "HorizontalRange",
+        "HeightOfLabTablemm", "MassOfBoxg", "TableDistancecm",
+        # Newton's Law Incline specific
+        "AngleOfIncline", "AngleinRad", "MassHanging", "SlidingMass",
+        "Ff", "Fgx", "TotalForcex",
+        # Universal Gravity specific
+        "mass1", "mass2", "Gc", "Radius1m", "Radius2m",
+        "Radius1", "Radius2", "XObject1", "XObject2", "YObject",
+        # Common
         "mu", "muK", "muS", "theta",
-        "h", "k", "F", "v0", "v1", "v2",
-        "m1", "m2", "r", "T", "x", "y",
+        "k", "F", "v0", "v1", "v2",
+        "m1", "m2", "r", "T",
     ]
 
     variaveis_extraidas = {}
@@ -324,14 +456,20 @@ def resolver_physics_aviary(pagina, url):
             pass
 
     # Limpa variaveis que provavelmente sao internas do simulador
-    # Mas preserva variaveis comuns em astronomia que usam numeros grandes
-    variaveis_astronomia = {'OrbitRadiusm', 'MoonMass', 'PlanetSizem'}
+    # Mas preserva variaveis comuns em astronomia/gravity que usam numeros grandes
+    variaveis_preservar = {
+        'OrbitRadiusm', 'MoonMass', 'PlanetSizem',  # Gas Giant
+        'mass1', 'mass2',  # Universal Gravity (big numbers)
+        'StartSpeed',  # Friction to Projectile
+        'XObject1', 'XObject2',  # Universal Gravity positions
+        'Radius1', 'Radius2',  # Universal Gravity radius in pixels
+    }
     variaveis_filtradas = {}
     for k, v in variaveis_extraidas.items():
-        if k in variaveis_astronomia:
+        if k in variaveis_preservar:
             variaveis_filtradas[k] = v  # Preserva mesmo sendo grande
-        elif isinstance(v, (int, float)) and abs(v) > 1e6:
-            continue  # Remove timestamps e valores internos
+        elif isinstance(v, (int, float)) and abs(v) > 1e10:
+            continue  # Remove only timestamps muito grandes (>10B)
         else:
             variaveis_filtradas[k] = v
 
