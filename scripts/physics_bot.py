@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ==========================================================
-  PHYSICS BOT v2 - Resolvedor Automático de Simuladores
+  PHYSICS BOT v3 - Resolvedor Automático de Simuladores
   Usa Playwright + Z.AI (GLM) + Vision (VLM)
   para resolver simuladores de física automaticamente.
   100% Gratuito. Zero configuração.
@@ -111,7 +111,7 @@ Regras:
         conta = texto[:300]
         nums = re.findall(r'[-+]?\d*\.\d+|\d+', texto)
         if nums:
-            resposta_num = ";".join(nums[-2:])  # pega os ultimos numeros
+            resposta_num = ";".join(nums[-2:])
 
     return conta, resposta_num, texto
 
@@ -152,7 +152,10 @@ def ler_imagem_com_vlm(caminho_imagem, prompt):
 
 def detectar_simulador(url, pagina):
     """Detecta o tipo de simulador baseado na URL e no conteudo da pagina."""
-    if "thephysicsaviary.com" in url:
+    url_lower = url.lower()
+    
+    # Physics Aviary - check by URL patterns
+    if "thephysicsaviary.com" in url_lower:
         return "physics_aviary"
 
     # Checa se tem os elementos tipicos do Physics Aviary
@@ -160,6 +163,10 @@ def detectar_simulador(url, pagina):
         if pagina.locator("#BeginButton").count() > 0:
             return "physics_aviary"
         if pagina.locator("#SubmitButton").count() > 0:
+            return "physics_aviary"
+        if pagina.locator("#StudentName").count() > 0:
+            return "physics_aviary"
+        if pagina.locator(".FormInputs").count() > 0:
             return "physics_aviary"
     except:
         pass
@@ -178,7 +185,7 @@ def calcular_direto_physics_aviary(variaveis, titulo=""):
     """
     resultado = {"respostas": [], "formulas": [], "passos": []}
 
-    v = variaveis.get("StartingSpeed") or variaveis.get("InitialVelocity") or variaveis.get("Velocity")
+    v = variaveis.get("StartingSpeed") or variaveis.get("InitialVelocity") or variaveis.get("Velocity") or variaveis.get("StartSpeed")
     mu = (variaveis.get("CoefficientOfFriction")
           or variaveis.get("CoefficientOfKineticFriction")
           or variaveis.get("mu") or variaveis.get("muK"))
@@ -240,7 +247,7 @@ def calcular_direto_physics_aviary(variaveis, titulo=""):
         return resultado
 
     # --- Incline Problem ---
-    theta = variaveis.get("Angle") or variaveis.get("theta") or variaveis.get("InclineAngle") or variaveis.get("AngleOfIncline")
+    theta = variaveis.get("Angle") or variaveis.get("theta") or variaveis.get("InclineAngle") or variaveis.get("AngleOfIncline") or variaveis.get("AngleinRad")
     mu_incline = variaveis.get("coefficientoffriction") or variaveis.get("CoefficientOfFriction") or variaveis.get("muK")
     m_slide = variaveis.get("SlidingMass") or variaveis.get("Mass")
     m_hang = variaveis.get("MassHanging")
@@ -248,28 +255,19 @@ def calcular_direto_physics_aviary(variaveis, titulo=""):
 
     if theta is not None and mu_incline is not None and m_slide is not None and m_hang is not None:
         import math as _math2
-        theta_rad = _math2.radians(theta) if theta > 3.14 else theta  # se > pi, já é radianos
-        # Força gravitacional paralela ao plano
+        theta_rad = _math2.radians(theta) if theta > 3.14 else theta
         Fgx = m_slide * g * _math2.sin(theta_rad)
-        # Força de atrito
         Fn = m_slide * g * _math2.cos(theta_rad)
         Ff = mu_incline * Fn
-        # Força líquida (considerando a massa pendurada)
-        # Se a caixa desce o plano: F_liq = m_hang*g - Fgx + Ff (ou -Ff se sobe)
-        # Determinar direção: comparar Fgx com m_hang*g
         F_hang = m_hang * g
         if Fgx > F_hang:
-            # Caixa desce o plano, atrito sobe
             F_liq = Fgx - F_hang - Ff
         else:
-            # Massa pendurada puxa a caixa pra cima, atrito desce
             F_liq = F_hang - Fgx - Ff
         massa_total = m_slide + m_hang
         aceleracao = F_liq / massa_total
-        # Tensão no fio
         T = m_hang * (g - aceleracao) if F_hang > Fgx else m_hang * (g + aceleracao)
         
-        # Verificar sinal da aceleração: negativa se desce o plano
         if Fgx > F_hang:
             aceleracao = -abs(aceleracao)
         else:
@@ -297,7 +295,7 @@ def calcular_direto_physics_aviary(variaveis, titulo=""):
         return resultado
 
     # --- Friction to Projectile Problem ---
-    StartSpeed = variaveis.get("StartSpeed")
+    StartSpeed = variaveis.get("StartSpeed") or variaveis.get("StartingSpeed")
     HeightOfLabTable = variaveis.get("HeightOfLabTable")
     TableDistance = variaveis.get("TableDistance")
     CoF = variaveis.get("CoefficientOfFriction")
@@ -306,18 +304,13 @@ def calcular_direto_physics_aviary(variaveis, titulo=""):
 
     if CoF is not None and MassBox is not None and TableDistance is not None and HeightOfLabTable is not None:
         import math as _math3
-        # Step 1: velocidade na borda da mesa (atrito desacelera)
-        # v^2 = v0^2 - 2*mu*g*d
         v0_sq = StartSpeed**2 - 2 * CoF * GravField * TableDistance if StartSpeed else None
         if v0_sq is not None and v0_sq > 0:
             launch_speed = _math3.sqrt(v0_sq)
         else:
             launch_speed = 0
 
-        # Step 2: tempo de voo (queda livre)
         t_flight = _math3.sqrt(2 * HeightOfLabTable / GravField)
-
-        # Step 3: distância horizontal
         d_horizontal = launch_speed * t_flight
 
         resultado["respostas"] = [f"{launch_speed:.2f}", f"{t_flight:.2f}", f"{d_horizontal:.2f}"]
@@ -338,29 +331,75 @@ def calcular_direto_physics_aviary(variaveis, titulo=""):
         return resultado
 
     # --- Universal Gravity Problem ---
+    import math as _math4
     m1 = variaveis.get("mass1")
     m2 = variaveis.get("mass2")
     Gc = variaveis.get("Gc") or 6.67e-11
     x1 = variaveis.get("XObject1")
     x2 = variaveis.get("XObject2")
+    
+    # Radius in meters (from pixels)
+    r1m = variaveis.get("Radius1m")
+    r2m = variaveis.get("Radius2m")
+    r1px = variaveis.get("Radius1")
+    r2px = variaveis.get("Radius2")
+    
+    # Density values - some versions use material indices + Densities array
+    density1 = variaveis.get("Density1")
+    density2 = variaveis.get("Density2")
+    material1_idx = variaveis.get("material1")
+    material2_idx = variaveis.get("material2")
+    densities_array = variaveis.get("Densities")
+    
+    # Resolve density from material index + Densities array
+    if density1 is None and material1_idx is not None and densities_array and isinstance(densities_array, list):
+        try:
+            idx = int(material1_idx)
+            if 0 <= idx < len(densities_array):
+                density1 = densities_array[idx]
+        except:
+            pass
+    if density2 is None and material2_idx is not None and densities_array and isinstance(densities_array, list):
+        try:
+            idx = int(material2_idx)
+            if 0 <= idx < len(densities_array):
+                density2 = densities_array[idx]
+        except:
+            pass
+
+    # If masses not given directly, compute from radius and density
+    if m1 is None and r1m is not None and density1 is not None:
+        vol1 = (4/3) * _math4.pi * r1m**3
+        m1 = vol1 * density1
+    elif m1 is None and r1px is not None and density1 is not None:
+        r1m_calc = r1px / 10.0 if r1px > 10 else r1px
+        vol1 = (4/3) * _math4.pi * r1m_calc**3
+        m1 = vol1 * density1
+        
+    if m2 is None and r2m is not None and density2 is not None:
+        vol2 = (4/3) * _math4.pi * r2m**3
+        m2 = vol2 * density2
+    elif m2 is None and r2px is not None and density2 is not None:
+        r2m_calc = r2px / 10.0 if r2px > 10 else r2px
+        vol2 = (4/3) * _math4.pi * r2m_calc**3
+        m2 = vol2 * density2
 
     if m1 is not None and m2 is not None and x1 is not None and x2 is not None:
-        # Formula exata do simulador: rad = (XObject2 - XObject1) / 10
+        # Distance from positions: rad = (x2 - x1) / 10 is the formula the simulator uses
         rad = abs(x2 - x1) / 10.0
+        
         F_gravity = Gc * m1 * m2 / (rad ** 2)
 
         resultado["respostas"] = [f"{rad:.2f}", f"{F_gravity:.2e}"]
         resultado["formulas"] = [
-            f"rad = (x2 - x1) / 10 = ({x2:.2f} - {x1:.2f}) / 10 = {rad:.4f} m",
+            f"rad = (x2-x1)/10 = ({x2:.2f}-{x1:.2f})/10 = {rad:.4f} m",
             f"F = G*m1*m2/rad^2 = {Gc}*{m1:.2e}*{m2:.2e}/{rad:.4f}^2 = {F_gravity:.4e} N"
         ]
         resultado["passos"] = [
             f"1. Massa 1: m1 = {m1:.2e} kg",
             f"2. Massa 2: m2 = {m2:.2e} kg",
-            f"3. Posicao objeto 1: x1 = {x1:.2f} px",
-            f"4. Posicao objeto 2: x2 = {x2:.2f} px",
-            f"5. Distancia entre centros: rad = (x2-x1)/10 = {rad:.4f} m",
-            f"6. Forca gravitacional: F = G*m1*m2/rad^2 = {F_gravity:.4e} N"
+            f"3. Distancia entre centros: rad = (x2-x1)/10 = {rad:.4f} m",
+            f"4. Forca gravitacional: F = G*m1*m2/rad^2 = {F_gravity:.4e} N"
         ]
         return resultado
 
@@ -382,29 +421,78 @@ def resolver_physics_aviary(pagina, url):
     resultados = {}
     usar_ia = False
 
-    # --- PASSO 0: Nome customizavel ---
     nome = resolver_physics_aviary.nome_aluno if hasattr(resolver_physics_aviary, 'nome_aluno') else "Physics Bot"
 
-    # --- PASSO 1: Preencher nome e clicar Begin ---
+    # --- PASSO 1: Esperar a pagina carregar completamente ---
     print(f"[BOT] Iniciando simulador Physics Aviary (nome: {nome})...")
+    
+    # Wait for the page to be fully loaded
+    try:
+        pagina.wait_for_load_state("networkidle", timeout=15000)
+    except:
+        pass
+    time.sleep(2)
+    
+    # Take initial screenshot to see what we're working with
+    initial_screenshot = SCREENSHOT_DIR / "_initial_state.png"
+    pagina.screenshot(path=str(initial_screenshot), full_page=True)
+    
+    # Check if we got redirected to homepage (404 → redirect)
+    current_url = pagina.url
+    if "find.php" in current_url or (current_url.rstrip("/") == "https://thephysicsaviary.com" or current_url.rstrip("/") == "https://thephysicsaviary.com/Physics"):
+        print(f"[BOT] AVISO: Pagina redirecionou para {current_url}. URL original pode estar errada.")
+        # Try to detect if we need to wait more
+        time.sleep(3)
+
+    # --- PASSO 2: Preencher nome e clicar Begin ---
     try:
         name_field = pagina.locator("#StudentName")
         if name_field.count() > 0:
+            name_field.click()
+            name_field.fill("")
             name_field.fill(nome)
             time.sleep(0.3)
-    except:
-        pass
+            print(f"[BOT] Nome preenchido: {nome}")
+    except Exception as e:
+        print(f"[BOT] Erro ao preencher nome: {e}")
 
-    try:
-        begin_btn = pagina.locator("#BeginButton")
-        if begin_btn.count() > 0:
-            begin_btn.click()
-            print("[BOT] Clicou em Begin!")
-            time.sleep(3)
-    except:
-        print("[BOT] Sem botao Begin, seguindo...")
+    # Click Begin - try multiple strategies
+    begin_clicked = False
+    for attempt in range(3):
+        try:
+            begin_btn = pagina.locator("#BeginButton")
+            if begin_btn.count() > 0 and begin_btn.is_visible():
+                begin_btn.click()
+                begin_clicked = True
+                print("[BOT] Clicou em Begin!")
+                time.sleep(4)
+                break
+        except:
+            pass
+        
+        # Try alternative selectors
+        for selector in ["button:has-text('Begin')", "input[value='Begin']", "#BeginButton", ".BeginButton"]:
+            try:
+                btn = pagina.locator(selector)
+                if btn.count() > 0:
+                    btn.first.click()
+                    begin_clicked = True
+                    print(f"[BOT] Clicou em Begin via selector: {selector}")
+                    time.sleep(4)
+                    break
+            except:
+                continue
+        if begin_clicked:
+            break
+        time.sleep(2)
 
-    # --- PASSO 2: Extrair variaveis JavaScript ---
+    if not begin_clicked:
+        print("[BOT] Sem botao Begin, simulador pode ja estar iniciado...")
+
+    # Wait for simulation to initialize
+    time.sleep(3)
+
+    # --- PASSO 3: Extrair variaveis JavaScript ---
     print("[BOT] Extraindo variaveis JavaScript...")
 
     variaveis_conhecidas = [
@@ -412,7 +500,7 @@ def resolver_physics_aviary(pagina, url):
         "InitialVelocity", "FinalVelocity", "Angle", "InclineAngle",
         "Distance", "Time", "Mass", "Force", "AppliedForce",
         "CoefficientOfKineticFriction", "CoefficientOfStaticFriction",
-        "coefficientoffriction",  # Newton's Law incline uses lowercase
+        "coefficientoffriction",
         "Acceleration", "Gravity", "Height", "Velocity",
         "SpringConstant", "Amplitude", "Frequency", "Period",
         "Wavelength", "Charge", "Voltage", "Current",
@@ -421,20 +509,17 @@ def resolver_physics_aviary(pagina, url):
         "Radius", "Temperature", "Pressure", "Volume",
         "InitialHeight", "FinalHeight", "LaunchAngle",
         "LaunchSpeed", "Range", "MaxHeight",
-        # Gas Giant specific
         "OrbitRadiusm", "OrbitRadiuspx", "MoonMass", "AngularSpeed",
         "PlanetSizepx", "PlanetSizem",
-        # Friction to Projectile specific
         "StartSpeed", "MassOfBox", "HeightOfLabTable", "TableDistance",
         "GravitationalField", "HorizontalRange",
         "HeightOfLabTablemm", "MassOfBoxg", "TableDistancecm",
-        # Newton's Law Incline specific
         "AngleOfIncline", "AngleinRad", "MassHanging", "SlidingMass",
         "Ff", "Fgx", "TotalForcex",
-        # Universal Gravity specific
         "mass1", "mass2", "Gc", "Radius1m", "Radius2m",
         "Radius1", "Radius2", "XObject1", "XObject2", "YObject",
-        # Common
+        "Density1", "Density2",
+        "material1", "material2",
         "mu", "muK", "muS", "theta",
         "k", "F", "v0", "v1", "v2",
         "m1", "m2", "r", "T",
@@ -444,10 +529,9 @@ def resolver_physics_aviary(pagina, url):
     for var in variaveis_conhecidas:
         try:
             valor = pagina.evaluate(f"typeof {var} !== 'undefined' ? {var} : null")
-            # Filtra tipos validos (numeros, strings) e descarta Date objects etc
             if valor is not None and isinstance(valor, (int, float, str)):
                 try:
-                    float(valor)  # testa se e numerico
+                    float(valor)
                     variaveis_extraidas[var] = valor
                 except (ValueError, TypeError):
                     if isinstance(valor, str) and len(valor) < 50:
@@ -455,35 +539,52 @@ def resolver_physics_aviary(pagina, url):
         except:
             pass
 
-    # Limpa variaveis que provavelmente sao internas do simulador
-    # Mas preserva variaveis comuns em astronomia/gravity que usam numeros grandes
+    # Filter out huge timestamps but preserve important variables
     variaveis_preservar = {
-        'OrbitRadiusm', 'MoonMass', 'PlanetSizem',  # Gas Giant
-        'mass1', 'mass2',  # Universal Gravity (big numbers)
-        'StartSpeed',  # Friction to Projectile
-        'XObject1', 'XObject2',  # Universal Gravity positions
-        'Radius1', 'Radius2',  # Universal Gravity radius in pixels
+        'OrbitRadiusm', 'MoonMass', 'PlanetSizem',
+        'mass1', 'mass2', 'StartSpeed',
+        'XObject1', 'XObject2', 'Radius1', 'Radius2',
+        'Radius1m', 'Radius2m', 'Density1', 'Density2',
     }
     variaveis_filtradas = {}
     for k, v in variaveis_extraidas.items():
         if k in variaveis_preservar:
-            variaveis_filtradas[k] = v  # Preserva mesmo sendo grande
+            variaveis_filtradas[k] = v
         elif isinstance(v, (int, float)) and abs(v) > 1e10:
-            continue  # Remove only timestamps muito grandes (>10B)
+            continue
         else:
             variaveis_filtradas[k] = v
 
     variaveis_extraidas = variaveis_filtradas
     print(f"[BOT] Variaveis extraidas: {variaveis_extraidas}")
+    
+    # Special: Extract Densities array for Universal Gravity problems
+    try:
+        densities_array = pagina.evaluate("typeof Densities !== 'undefined' ? Densities : null")
+        if densities_array and isinstance(densities_array, list):
+            variaveis_extraidas["Densities"] = densities_array
+            # Also get Materials array
+            materials_array = pagina.evaluate("typeof Materials !== 'undefined' ? Materials : null")
+            if materials_array:
+                variaveis_extraidas["Materials"] = materials_array
+            print(f"[BOT] Densities array: {densities_array}")
+            if materials_array:
+                print(f"[BOT] Materials: {materials_array}")
+    except:
+        pass
 
-    # --- PASSO 3: Ler enunciado e labels ---
+    # --- PASSO 4: Ler enunciado e labels ---
+    enunciado = ""
     try:
         enunciado = pagina.locator("#SystemMessage").inner_text()
     except:
         try:
             enunciado = pagina.locator("#LabDirections").inner_text()
         except:
-            enunciado = ""
+            try:
+                enunciado = pagina.locator("#Directions").inner_text()
+            except:
+                pass
 
     labels = []
     try:
@@ -492,7 +593,7 @@ def resolver_physics_aviary(pagina, url):
     except:
         pass
 
-    # Conta quantos campos de resposta existem
+    # Count answer fields
     num_campos = 0
     for i in range(1, 10):
         try:
@@ -504,9 +605,8 @@ def resolver_physics_aviary(pagina, url):
     print(f"[BOT] Enunciado: {enunciado[:200]}")
     print(f"[BOT] Campos ({num_campos}): {labels}")
 
-    # --- PASSO 4: Estrategia de resolucao em camadas ---
+    # --- PASSO 5: Estrategia de resolucao em camadas ---
 
-    # Camada 1: Calculo direto
     titulo_pagina = pagina.title() if pagina else ""
     calculo_direto = calcular_direto_physics_aviary(variaveis_extraidas, titulo_pagina)
 
@@ -515,10 +615,9 @@ def resolver_physics_aviary(pagina, url):
         respostas = calculo_direto["respostas"]
         passos = "\n".join(calculo_direto["passos"])
     else:
-        # Camada 2: VLM para ler o canvas + IA para calcular
+        # Camada 2: VLM + IA
         print("[BOT] Calculo direto nao disponivel. Usando VLM + IA...")
 
-        # Screenshot do canvas para o VLM ler
         canvas_path = SCREENSHOT_DIR / "_canvas_temp.png"
         pagina.screenshot(path=str(canvas_path), full_page=True)
 
@@ -530,7 +629,6 @@ Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
         vlm_resultado = ler_imagem_com_vlm(canvas_path, vlm_prompt)
         print(f"[VLM] Dados lidos: {vlm_resultado[:300]}")
 
-        # Agora manda para a IA calcular com os dados do VLM + enunciado
         contexto = f"Variaveis JS extraidas: {variaveis_extraidas}\n"
         if labels:
             contexto += f"Campos de resposta ({num_campos}): {labels}\n"
@@ -548,8 +646,7 @@ Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
     print(f"\n[BOT] Calculos:\n{passos}")
     print(f"[BOT] Respostas: {respostas}")
 
-    # --- PASSO 5: Mostrar formulario de resposta ---
-    # Alguns simuladores (Gas Giant) escondem o formulario ate usar o timer
+    # --- PASSO 6: Mostrar formulario de resposta ---
     form_visivel = False
     try:
         form_visivel = pagina.locator("#A1").is_visible()
@@ -558,7 +655,6 @@ Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
 
     if not form_visivel:
         print("[BOT] Formulario oculto, ativando ferramentas...")
-        # Tenta ToggleTools (Gas Giant style)
         try:
             toggle = pagina.locator("#ToggleTools")
             if toggle.count() > 0:
@@ -567,18 +663,25 @@ Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
         except:
             pass
 
-        # Tenta Start/Stop timer para revelar formulario
         try:
             stop_btn = pagina.locator("#StopTimerButton")
             if stop_btn.count() > 0:
-                stop_btn.click()  # Start timer
+                stop_btn.click()
                 time.sleep(1)
-                stop_btn.click()  # Stop timer -> mostra formulario
+                stop_btn.click()
                 time.sleep(0.5)
         except:
             pass
 
-        # Force show como ultimo recurso
+        # Try StartTimerButton too
+        try:
+            start_btn = pagina.locator("#StartTimerButton")
+            if start_btn.count() > 0:
+                start_btn.click()
+                time.sleep(2)
+        except:
+            pass
+
         try:
             if not pagina.locator("#A1").is_visible():
                 pagina.evaluate('$("#SpaceForAnswer").show()')
@@ -586,9 +689,20 @@ Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
         except:
             pass
 
-    # --- PASSO 5b: Preencher respostas ---
+    # --- PASSO 7: Preencher respostas ---
+    # If num_campos is 0, try to detect fields again after showing form
+    if num_campos == 0:
+        for i in range(1, 10):
+            try:
+                if pagina.locator(f"#A{i}").count() > 0 and pagina.locator(f"#A{i}").is_visible():
+                    num_campos = i
+            except:
+                break
+        if num_campos > 0:
+            print(f"[BOT] Campos detectados apos mostrar formulario: {num_campos}")
+
     for i, resp in enumerate(respostas):
-        if i >= num_campos and num_campos > 0:
+        if num_campos > 0 and i >= num_campos:
             break
         input_id = f"#A{i+1}"
         try:
@@ -596,27 +710,28 @@ Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
             if locator.count() > 0 and locator.is_visible():
                 locator.click()
                 locator.fill("")
-                locator.fill(resp)
+                locator.fill(str(resp))
                 print(f"[BOT] Preencheu {input_id} com '{resp}'")
         except Exception as e:
             print(f"[BOT] Erro ao preencher {input_id}: {e}")
 
     time.sleep(0.5)
 
-    # --- PASSO 6: Screenshot ANTES de submeter ---
+    # --- PASSO 8: Screenshot ANTES de submeter ---
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     screenshot_pre = SCREENSHOT_DIR / f"antes_submeter_{timestamp}.png"
     pagina.screenshot(path=str(screenshot_pre), full_page=True)
 
-    # --- PASSO 7: Clicar em Check/Submit ---
+    # --- PASSO 9: Clicar em Check/Submit ---
+    submitted = False
     try:
         submit = pagina.locator("#SubmitButton")
-        if submit.count() > 0:
+        if submit.count() > 0 and submit.is_visible():
             submit.click()
+            submitted = True
             print("[BOT] Clicou em Check! Aguardando animacao...")
 
-            # Espera a animacao terminar (Moving == "done")
-            for _ in range(40):  # max 20 segundos
+            for _ in range(40):
                 time.sleep(0.5)
                 try:
                     moving = pagina.evaluate("typeof Moving !== 'undefined' ? Moving : 'unknown'")
@@ -625,17 +740,17 @@ Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
                         break
                 except:
                     pass
-            time.sleep(1.5)  # Pausa extra para renderizar resultado final
+            time.sleep(1.5)
         else:
-            print("[BOT] Botao Check nao encontrado")
+            print("[BOT] Botao Check nao encontrado ou nao visivel")
     except Exception as e:
         print(f"[BOT] Erro ao submeter: {e}")
 
-    # --- PASSO 8: Screenshot DEPOIS ---
+    # --- PASSO 10: Screenshot DEPOIS ---
     screenshot_pos = SCREENSHOT_DIR / f"resultado_{timestamp}.png"
     pagina.screenshot(path=str(screenshot_pos), full_page=True)
 
-    # --- PASSO 9: Verificar resultado ---
+    # --- PASSO 11: Verificar resultado ---
     resultado = "Ver screenshot"
     try:
         final_color = pagina.evaluate("typeof FinalColor !== 'undefined' ? FinalColor : null")
@@ -650,7 +765,16 @@ Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
     except:
         pass
 
-    # Se nao detectou pela cor, usa VLM para verificar
+    # Try alternative result detection
+    if resultado == "Ver screenshot":
+        try:
+            # Check for green/red indicators in the page
+            correct = pagina.evaluate("typeof Correct !== 'undefined' ? Correct : null")
+            if correct is not None:
+                resultado = "CORRETO!" if correct else "INCORRETO"
+        except:
+            pass
+
     if resultado == "Ver screenshot":
         print("[BOT] Verificando resultado com VLM...")
         vlm_check = ler_imagem_com_vlm(
@@ -663,7 +787,7 @@ Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
         elif "INCORRETO" in vlm_check.upper():
             resultado = "INCORRETO (VLM)"
 
-    # Checa respostas corretas
+    # Check correct answers
     respostas_corretas = {}
     for i in range(1, 6):
         try:
@@ -673,7 +797,7 @@ Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
         except:
             pass
 
-    # --- PASSO 10: Salvar ---
+    # --- PASSO 12: Salvar ---
     resultados = {
         "url": url,
         "simulador": "Physics Aviary",
@@ -703,12 +827,10 @@ def resolver_generico(pagina, url):
     """Resolve simuladores genericos usando VLM + IA."""
     print("[BOT] Modo generico - usando VLM + IA...")
 
-    # Screenshot para o VLM ler
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     canvas_path = SCREENSHOT_DIR / f"_generico_{timestamp}.png"
     pagina.screenshot(path=str(canvas_path), full_page=True)
 
-    # Le a pagina com VLM
     vlm_prompt = """Analise este simulador de fisica. Extraia:
 1. Todos os dados numericos (valores e unidades)
 2. O que esta sendo pedido (quais respostas)
@@ -717,35 +839,30 @@ Seja especifico com os numeros."""
     vlm_dados = ler_imagem_com_vlm(canvas_path, vlm_prompt)
     print(f"[VLM] Dados: {vlm_dados[:300]}")
 
-    # Le texto da pagina como complemento
     try:
         texto_pagina = pagina.inner_text("body")
     except:
         texto_pagina = ""
 
-    # Resolve com IA
     contexto = f"Dados do VLM:\n{vlm_dados}\n\nTexto da pagina:\n{texto_pagina[:1000]}"
     conta, resposta_num, texto_completo = resolver_com_ia(
         "Resolva este problema de fisica do simulador", contexto
     )
     respostas = [r.strip() for r in resposta_num.split(";")]
 
-    # Tenta preencher campos
     inputs = pagina.locator("input[type='text'], input[type='number'], .FormInputs").all()
     for i, (inp, resp) in enumerate(zip(inputs, respostas)):
         try:
-            inp.fill(resp)
+            inp.fill(str(resp))
             print(f"[BOT] Preencheu campo {i+1} com '{resp}'")
         except:
             pass
 
     time.sleep(0.5)
 
-    # Screenshot antes
     screenshot_pre = SCREENSHOT_DIR / f"antes_submeter_{timestamp}.png"
     pagina.screenshot(path=str(screenshot_pre), full_page=True)
 
-    # Tenta submeter
     for sel in ["#SubmitButton", ".Button", "button:has-text('Check')",
                 "button:has-text('Submit')", "input[type='submit']"]:
         try:
@@ -759,11 +876,9 @@ Seja especifico com os numeros."""
 
     time.sleep(4)
 
-    # Screenshot depois
     screenshot_pos = SCREENSHOT_DIR / f"resultado_{timestamp}.png"
     pagina.screenshot(path=str(screenshot_pos), full_page=True)
 
-    # Verifica com VLM
     vlm_check = ler_imagem_com_vlm(
         screenshot_pos,
         "O resultado esta CORRETO ou INCORRETO? Responda apenas: CORRETO ou INCORRETO"
@@ -825,11 +940,10 @@ def resolver_simulador(url, nome="Physics Bot"):
         print(f"[ERRO] URL invalida: {url}")
         return None
 
-    # Configura nome do aluno
     resolver_physics_aviary.nome_aluno = nome
 
     print(f"\n{'='*60}")
-    print(f"  PHYSICS BOT v2 - Iniciando resolucao")
+    print(f"  PHYSICS BOT v3 - Iniciando resolucao")
     print(f"  URL: {url}")
     print(f"  Nome: {nome}")
     print(f"{'='*60}\n")
@@ -845,7 +959,29 @@ def resolver_simulador(url, nome="Physics Bot"):
         pagina = contexto.new_page()
 
         print(f"[BOT] Acessando: {url}...")
-        pagina.goto(url, wait_until="domcontentloaded", timeout=30000)
+        
+        # Navigate with better error handling
+        try:
+            response = pagina.goto(url, wait_until="domcontentloaded", timeout=30000)
+            if response:
+                status = response.status
+                print(f"[BOT] HTTP Status: {status}")
+                if status == 404:
+                    print(f"[BOT] ERRO: URL retornou 404. Verifique a URL do simulador.")
+                    navegador.close()
+                    return {"resultado": "ERRO_URL_404", "respostas_enviadas": [], "calculos": "URL retornou 404. Verifique se a URL esta correta.", "metodo": "erro"}
+                if status == 429:
+                    print(f"[BOT] ERRO: Rate limited (429). Aguarde um momento e tente novamente.")
+                    time.sleep(10)
+                    response = pagina.goto(url, wait_until="domcontentloaded", timeout=30000)
+                    if response and response.status == 429:
+                        navegador.close()
+                        return {"resultado": "ERRO_RATE_LIMITED", "respostas_enviadas": [], "calculos": "Site com rate limiting. Tente novamente em alguns segundos.", "metodo": "erro"}
+        except Exception as e:
+            print(f"[BOT] Erro ao acessar URL: {e}")
+            navegador.close()
+            return {"resultado": "ERRO_CONEXAO", "respostas_enviadas": [], "calculos": f"Erro ao acessar simulador: {str(e)}", "metodo": "erro"}
+        
         time.sleep(3)
 
         tipo = detectar_simulador(url, pagina)

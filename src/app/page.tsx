@@ -29,7 +29,7 @@ import {
   ImageIcon,
   AlertTriangle,
   Zap,
-  Skull,
+  Atom,
 } from "lucide-react";
 import {
   Dialog,
@@ -495,7 +495,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-purple-900/30">
-              <Skull className="w-5 h-5 text-white" />
+              <Atom className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="font-bold text-lg leading-tight glow-text text-purple-100">
@@ -613,7 +613,7 @@ export default function Home() {
             <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               {msg.role === "assistant" && (
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center shrink-0 mt-1 shadow-lg shadow-purple-900/20">
-                  <Skull className="w-4 h-4 text-white" />
+                  <Atom className="w-4 h-4 text-white" />
                 </div>
               )}
               <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${msg.role === "user" ? "bg-purple-600/20 border border-purple-700/30 text-purple-100" : "bg-muted/50 border border-purple-900/10"}`}>
@@ -648,7 +648,7 @@ export default function Home() {
           {isLoading && (
             <div className="flex gap-3">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-fuchsia-600 flex items-center justify-center shrink-0 shadow-lg shadow-purple-900/20">
-                <Skull className="w-4 h-4 text-white" />
+                <Atom className="w-4 h-4 text-white" />
               </div>
               <div className="bg-muted/50 border border-purple-900/10 rounded-2xl px-4 py-3">
                 <div className="flex items-center gap-3">
