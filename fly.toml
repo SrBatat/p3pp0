@@ -1,0 +1,50 @@
+# p3pp4 — Configuração do fly.io
+# Deploy: fly deploy
+# Logs:  fly logs
+# SSH:    fly ssh console
+
+app = "p3pp4"
+primary_region = "gru"  # São Paulo, Brasil
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "3000"
+  NODE_ENV = "production"
+  DATABASE_URL = "file:./db/custom.db"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  max_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+# Volume persistente para o banco SQLite e screenshots
+[[mounts]]
+  source = "p3pp4_data"
+  destination = "/app/db"
+  initial_size = "1gb"
+
+# Health check
+[checks]
+  [checks.alive]
+    type = "http"
+    port = 3000
+    path = "/"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+
+# Escalar para 256MB (suficiente para o p3pp4)
+[vm]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512

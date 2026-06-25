@@ -24,3 +24,21 @@ model SolverSession {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+// Memória de adaptação — salva padrões de resolução para reuso
+model SolverPattern {
+  id              String   @id @default(cuid())
+  simulatorType   String   // ex: "CarStoppingProblem", "UniversalGravityProblem"
+  urlPattern      String   // parte da URL que identifica o tipo
+  variaveisNecessarias String // JSON: lista de variáveis JS necessárias ["StartingSpeed","MassOfCar"]
+  formulaResolucao String  // JSON: fórmulas e lógica de cálculo
+  camposResposta  String   // JSON: labels dos campos ["Time (s):", "Displacement (m):"]
+  metodo          String   // "calculo_direto" ou "ia"
+  vezesUsado      Int      @default(1)
+  vezesCorreto    Int      @default(0)
+  ultimaUrl       String?  // última URL que usou este padrão
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([simulatorType])
+}

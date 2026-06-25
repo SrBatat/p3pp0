@@ -29,6 +29,144 @@ SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
 LOG_FILE = OUTPUT_DIR / "log_calculos.txt"
 
+# Memory file for adaptation patterns
+MEMORY_FILE = OUTPUT_DIR / "solver_patterns.json"
+
+
+# ====================================================================
+# 1.5 MEMÓRIA DE ADAPTAÇÃO
+# ====================================================================
+
+def carregar_memoria():
+    """Carrega os padrões de resolução salvos."""
+    if MEMORY_FILE.exists():
+        try:
+            with open(MEMORY_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
+
+
+def salvar_memoria(memoria):
+    """Salva os padrões de resolução no arquivo."""
+    with open(MEMORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(memoria, f, ensure_ascii=False, indent=2)
+    print(f"[MEMORIA] Padrão salvo. Total: {len(memoria)} tipos conhecidos")
+
+
+def detectar_tipo_por_url(url):
+    """Detecta o tipo do simulador pela URL. Ex: 'CarStoppingProblem'"""
+    # Extrai o nome do programa da URL
+    # Ex: https://thephysicsaviary.com/Physics/APPrograms/CarStoppingProblem/
+    match = re.search(r'/APPrograms/([^/?#]+)', url)
+    if match:
+        return match.group(1)
+    match = re.search(r'/Programs/([^/?#]+)', url)
+    if match:
+        return match.group(1)
+    # Fallback: usa o último segmento da URL
+    parts = url.rstrip("/").split("/")
+    return parts[-1] if parts else "unknown"
+
+
+def buscar_padrao(url):
+    """Busca um padrão de resolução salvo para este tipo de simulador."""
+    memoria = carregar_memoria()
+    tipo = detectar_tipo_por_url(url)
+    
+    if tipo in memoria:
+        padrao = memoria[tipo]
+        print(f"[MEMORIA] Padrão encontrado para '{tipo}' (usado {padrao.get('vezesUsado', 0)}x, acerto {padrao.get('vezesCorreto', 0)}x)")
+        return padrao
+    
+    print(f"[MEMORIA] Nenhum padrão salvo para '{tipo}'. Vou aprender...")
+    return None
+
+
+def registrar_padrao(url, variaveis_extraidas, calculo_direto_result, resultado_final, labels, metodo):
+    """Registra um padrão de resolução bem-sucedido na memória."""
+    tipo = detectar_tipo_por_url(url)
+    memoria = carregar_memoria()
+    
+    # Se já existe, atualiza as estatísticas
+    if tipo in memoria:
+        padrao = memoria[tipo]
+        padrao["vezesUsado"] = padrao.get("vezesUsado", 0) + 1
+        if resultado_final and "CORRETO" in resultado_final.upper():
+            padrao["vezesCorreto"] = padrao.get("vezesCorreto", 0) + 1
+        padrao["ultimaUrl"] = url
+        padrao["updatedAt"] = datetime.now().isoformat()
+        
+        # Atualiza variáveis se encontrou mais
+        vars_conhecidas = set(padrao.get("variaveisNecessarias", []))
+        vars_novas = set(variaveis_extraidas.keys())
+        padrao["variaveisNecessarias"] = list(vars_conhecidas | vars_novas)
+        
+        # Atualiza labels se mudaram
+        if labels:
+            padrao["camposResposta"] = labels
+        
+        print(f"[MEMORIA] Padrão atualizado: {tipo} ({padrao['vezesUsado']}x usado, {padrao['vezesCorreto']}x correto)")
+    else:
+        # Cria novo padrão
+        padrao = {
+            "simulatorType": tipo,
+            "urlPattern": f"/APPrograms/{tipo}/",
+            "variaveisNecessarias": list(variaveis_extraidas.keys()),
+            "metodo": metodo,
+            "vezesUsado": 1,
+            "vezesCorreto": 1 if (resultado_final and "CORRETO" in resultado_final.upper()) else 0,
+            "ultimaUrl": url,
+            "camposResposta": labels if labels else [],
+            "createdAt": datetime.now().isoformat(),
+            "updatedAt": datetime.now().isoformat(),
+        }
+        
+        # Se foi cálculo direto, salva a lógica
+        if metodo == "calculo_direto" and calculo_direto_result:
+            padrao["formulaResolucao"] = {
+                "tipo": "calculo_direto",
+                "passos": calculo_direto_result.get("passos", []),
+                "formulas": calculo_direto_result.get("formulas", []),
+                "variaveisUsadas": {k: v for k, v in variaveis_extraidas.items() if v is not None},
+            }
+        
+        memoria[tipo] = padrao
+        print(f"[MEMORIA] Novo padrão registrado: {tipo}")
+    
+    salvar_memoria(memoria)
+    return padrao
+
+
+def resolver_com_padrao(padrao, variaveis_extraidas):
+    """
+    Tenta resolver usando um padrão salvo na memória.
+    Retorna (respostas, passos, metodo) ou None se não conseguir.
+    """
+    formula = padrao.get("formulaResolucao")
+    if not formula:
+        return None
+    
+    tipo_formula = formula.get("tipo", "")
+    
+    if tipo_formula == "calculo_direto":
+        # Verifica se temos todas as variáveis necessárias
+        vars_necessarias = padrao.get("variaveisNecessarias", [])
+        vars_faltando = [v for v in vars_necessarias if v not in variaveis_extraidas and v != "Densities" and v != "Materials"]
+        
+        if vars_faltando:
+            print(f"[MEMORIA] Faltam variáveis: {vars_faltando}. Não posso usar o padrão direto.")
+            return None
+        
+        # Re-executa o cálculo direto com as variáveis atuais
+        calculo = calcular_direto_physics_aviary(variaveis_extraidas)
+        if calculo["respostas"]:
+            print(f"[MEMORIA] Resolvido com padrão salvo! Respostas: {calculo['respostas']}")
+            return calculo["respostas"], "\n".join(calculo["passos"]), "memoria_calculo_direto"
+    
+    return None
+
 
 # ====================================================================
 # 1. CÉREBRO - Z.AI Chat (gratuito via CLI)
@@ -614,34 +752,46 @@ def resolver_physics_aviary(pagina, url):
         print(f"[BOT] Calculo direto disponivel! Respostas: {calculo_direto['respostas']}")
         respostas = calculo_direto["respostas"]
         passos = "\n".join(calculo_direto["passos"])
+        metodo_final = "calculo_direto"
     else:
-        # Camada 2: VLM + IA
-        print("[BOT] Calculo direto nao disponivel. Usando VLM + IA...")
+        # Camada 1.5: Buscar na memória de adaptação
+        padrao = buscar_padrao(url)
+        resultado_memoria = None
+        if padrao:
+            resultado_memoria = resolver_com_padrao(padrao, variaveis_extraidas)
+        
+        if resultado_memoria:
+            respostas, passos, metodo_final = resultado_memoria
+            print(f"[BOT] Resolvido via MEMÓRIA de adaptação! Método: {metodo_final}")
+        else:
+            # Camada 2: VLM + IA
+            print("[BOT] Calculo direto e memória não disponíveis. Usando VLM + IA...")
 
-        canvas_path = SCREENSHOT_DIR / "_canvas_temp.png"
-        pagina.screenshot(path=str(canvas_path), full_page=True)
+            canvas_path = SCREENSHOT_DIR / "_canvas_temp.png"
+            pagina.screenshot(path=str(canvas_path), full_page=True)
 
-        vlm_prompt = """Extraia TODOS os dados numericos e informacoes deste simulador de fisica.
+            vlm_prompt = """Extraia TODOS os dados numericos e informacoes deste simulador de fisica.
 Liste cada variavel com seu valor e unidade.
 Exemplo: v = 20.0 m/s, mu = 0.39, m = 914 kg
 Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
 
-        vlm_resultado = ler_imagem_com_vlm(canvas_path, vlm_prompt)
-        print(f"[VLM] Dados lidos: {vlm_resultado[:300]}")
+            vlm_resultado = ler_imagem_com_vlm(canvas_path, vlm_prompt)
+            print(f"[VLM] Dados lidos: {vlm_resultado[:300]}")
 
-        contexto = f"Variaveis JS extraidas: {variaveis_extraidas}\n"
-        if labels:
-            contexto += f"Campos de resposta ({num_campos}): {labels}\n"
-        if vlm_resultado:
-            contexto += f"\nDados lidos pelo VLM do canvas:\n{vlm_resultado}\n"
+            contexto = f"Variaveis JS extraidas: {variaveis_extraidas}\n"
+            if labels:
+                contexto += f"Campos de resposta ({num_campos}): {labels}\n"
+            if vlm_resultado:
+                contexto += f"\nDados lidos pelo VLM do canvas:\n{vlm_resultado}\n"
 
-        conta, resposta_num, texto_completo = resolver_com_ia(
-            enunciado if enunciado else "Resolva o problema de fisica mostrado na imagem",
-            contexto
-        )
-        respostas = [r.strip() for r in resposta_num.split(";")]
-        passos = conta
-        usar_ia = True
+            conta, resposta_num, texto_completo = resolver_com_ia(
+                enunciado if enunciado else "Resolva o problema de fisica mostrado na imagem",
+                contexto
+            )
+            respostas = [r.strip() for r in resposta_num.split(";")]
+            passos = conta
+            usar_ia = True
+            metodo_final = "ia"
 
     print(f"\n[BOT] Calculos:\n{passos}")
     print(f"[BOT] Respostas: {respostas}")
@@ -797,7 +947,13 @@ Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
         except:
             pass
 
-    # --- PASSO 12: Salvar ---
+    # --- PASSO 12: Registrar na memória de adaptação ---
+    try:
+        registrar_padrao(url, variaveis_extraidas, calculo_direto, resultado, labels, metodo_final if 'metodo_final' in dir() else ("ia" if usar_ia else "calculo_direto"))
+    except Exception as e:
+        print(f"[MEMORIA] Erro ao registrar padrão: {e}")
+
+    # --- PASSO 13: Salvar ---
     resultados = {
         "url": url,
         "simulador": "Physics Aviary",
@@ -809,7 +965,7 @@ Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
         "respostas_enviadas": respostas,
         "respostas_corretas": respostas_corretas,
         "resultado": resultado,
-        "metodo": "ia" if usar_ia else "calculo_direto",
+        "metodo": metodo_final if 'metodo_final' in dir() else ("ia" if usar_ia else "calculo_direto"),
         "screenshot_antes": str(screenshot_pre),
         "screenshot_depois": str(screenshot_pos),
         "timestamp": timestamp
