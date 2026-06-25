@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial p3pp4 - Oracle Cloud</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+@page {
+    size: 720px 1020px;
+    margin: 0;
+}
+:root {
+    --c-bg: #0d0d0d;
+    --c-surface: #141414;
+    --c-card: #1a1a1a;
+    --c-border: #2a2a2a;
+    --c-text: #e8e6e3;
+    --c-muted: #888;
+    --c-accent: #ff4757;
+    --c-accent2: #c0392b;
+    --c-code-bg: #111;
+    --c-step: #ff4757;
+    --c-warn: #f39c12;
+    --c-ok: #2ecc71;
+}
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 720px;
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-family: 'Inter', 'Noto Sans SC', sans-serif;
+    line-height: 1.65;
+    font-size: 15px;
+}
+@media screen {
+    html {
+        height: auto;
+        display: flex;
+        justify-content: center;
+        background: #1a1a1a;
+    }
+    body {
+        transform-origin: top center;
+        margin: 20px auto;
+    }
+}
+
+/* COVER */
+.cover {
+    width: 720px;
+    height: 1020px;
+    box-sizing: border-box;
+    break-after: page;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 70px 65px;
+    background: radial-gradient(ellipse at 50% 30%, #1a0a0a 0%, #0d0d0d 70%);
+}
+.cover::before {
+    content: '';
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,71,87,0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+.cover-tag {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--c-accent);
+    margin-bottom: 30px;
+    font-weight: 600;
+}
+.cover-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1.1;
+    text-align: center;
+    color: var(--c-text);
+    margin-bottom: 24px;
+}
+.cover-title span {
+    color: var(--c-accent);
+}
+.cover-subtitle {
+    font-size: 18px;
+    color: var(--c-muted);
+    text-align: center;
+    max-width: 480px;
+    line-height: 1.5;
+    margin-bottom: 50px;
+}
+.cover-divider {
+    width: 60px;
+    height: 2px;
+    background: var(--c-accent);
+    margin-top: 20px;
+    margin-bottom: 50px;
+}
+.cover-meta {
+    font-size: 12px;
+    color: #555;
+    text-align: center;
+    position: absolute;
+    bottom: 50px;
+}
+
+/* MAIN CONTENT */
+.main-content {
+    padding: 55px 65px 40px 65px;
+}
+
+/* Chapter headers */
+.chapter-header {
+    break-after: avoid;
+    break-inside: avoid;
+    margin-top: 28px;
+    margin-bottom: 18px;
+}
+.section-tag {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--c-accent);
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+.section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--c-text);
+    margin-bottom: 8px;
+    line-height: 1.2;
+}
+.divider {
+    width: 40px;
+    height: 2px;
+    background: var(--c-accent);
+    margin-top: 16px;
+    margin-bottom: 22px;
+}
+
+/* Body text */
+.body-text {
+    margin-bottom: 14px;
+    color: var(--c-text);
+    font-size: 15px;
+    line-height: 1.7;
+}
+.body-text strong {
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Code blocks */
+.code-block {
+    background: var(--c-code-bg);
+    border: 1px solid var(--c-border);
+    border-left: 3px solid var(--c-accent);
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    font-family: 'Liberation Mono', 'DejaVu Sans Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #ccc;
+    overflow-wrap: break-word;
+    word-break: break-all;
+    break-inside: avoid;
+}
+.code-block .comment {
+    color: #666;
+}
+.code-block .cmd {
+    color: var(--c-accent);
+}
+
+/* Step cards */
+.step-card {
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    break-inside: avoid;
+}
+.step-number {
+    display: inline-block;
+    background: var(--c-accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 24px;
+    margin-right: 8px;
+}
+.step-title {
+    font-weight: 700;
+    font-size: 16px;
+    color: #fff;
+    margin-bottom: 8px;
+}
+.step-card p {
+    margin: 0 0 8px 0;
+    color: var(--c-text);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Warning box */
+.warn-box {
+    background: rgba(243,156,18,0.08);
+    border: 1px solid rgba(243,156,18,0.3);
+    border-left: 3px solid var(--c-warn);
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    break-inside: avoid;
+}
+.warn-box p {
+    margin: 0;
+    color: var(--c-text);
+    font-size: 14px;
+}
+.warn-box .warn-label {
+    color: var(--c-warn);
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+/* OK/Success box */
+.ok-box {
+    background: rgba(46,204,113,0.08);
+    border: 1px solid rgba(46,204,113,0.3);
+    border-left: 3px solid var(--c-ok);
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    break-inside: avoid;
+}
+.ok-box p {
+    margin: 0;
+    color: var(--c-text);
+    font-size: 14px;
+}
+.ok-box .ok-label {
+    color: var(--c-ok);
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+/* List */
+.item-list {
+    margin: 0 0 14px 0;
+    padding-left: 20px;
+}
+.item-list li {
+    margin-bottom: 6px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--c-text);
+}
+
+/* Table */
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+    font-size: 13px;
+    break-inside: avoid;
+}
+.info-table th {
+    background: var(--c-card);
+    color: var(--c-accent);
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--c-border);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+.info-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #1e1e1e;
+    color: var(--c-text);
+    vertical-align: top;
+}
+.info-table code {
+    background: var(--c-code-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'Liberation Mono', monospace;
+    font-size: 12px;
+    color: var(--c-accent);
+}
+
+/* Ending page */
+.ending {
+    width: 720px;
+    height: 1020px;
+    box-sizing: border-box;
+    break-before: page;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(ellipse at 50% 50%, #1a0a0a 0%, #0d0d0d 70%);
+    padding: 70px 65px;
+}
+.ending-icon {
+    font-size: 48px;
+    margin-bottom: 24px;
+}
+.ending-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--c-text);
+    margin-bottom: 16px;
+}
+.ending-sub {
+    font-size: 16px;
+    color: var(--c-muted);
+    text-align: center;
+    max-width: 400px;
+    line-height: 1.5;
+}
+.ending-link {
+    margin-top: 30px;
+    font-family: 'Liberation Mono', monospace;
+    font-size: 14px;
+    color: var(--c-accent);
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== COVER ==================== -->
+<div class="cover">
+    <div class="cover-tag">Tutorial de Deploy</div>
+    <div class="cover-title">p3pp4 <span>na Oracle Cloud</span></div>
+    <div class="cover-subtitle">Guia completo e passo a passo para hospedar o Physics Aviary Solver gratuitamente na Oracle Cloud Always Free</div>
+    <div class="cover-divider"></div>
+    <div class="cover-meta">v1.0 &mdash; Junho 2026 &mdash; 100% Gratuito</div>
+</div>
+
+<!-- ==================== CONTENT ==================== -->
+<div class="main-content">
+
+    <!-- ===== CHAPTER 1: VISAO GERAL ===== -->
+    <div class="chapter-header">
+        <div class="section-tag">Capitulo 1</div>
+        <div class="section-title">Visao Geral</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="body-text">
+        O <strong>p3pp4</strong> e um solver automatico de simuladores de fisica que utiliza Playwright (browser headless), Python, Node.js e a IA Z.AI (GLM). Ele precisa de um servidor completo para funcionar, pois roda processos longos, acessa o filesystem local e executa navegadores invisiveis. Plataformas serverless como Vercel ou Netlify <strong>nao funcionam</strong> para este tipo de aplicacao.
+    </div>
+
+    <div class="body-text">
+        A <strong>Oracle Cloud Always Free</strong> oferece maquinas virtuais gratuitas permanentemente (nao e trial). Com ela, voce tem um VPS real com Ubuntu, acesso root completo, filesystem persistente e sem limites de tempo de execucao. E a melhor opcao para o p3pp4.
+    </div>
+
+    <table class="info-table">
+        <tr><th>Recurso</th><th>Oracle Cloud Free</th></tr>
+        <tr><td>VMs ARM (Ampere)</td><td>Ate 4 VMs, 24GB RAM total</td></tr>
+        <tr><td>Disco</td><td>200GB total</td></tr>
+        <tr><td>Bandwidth</td><td>10TB/mes</td></tr>
+        <tr><td>Duracao</td><td>Para sempre (nao e trial)</td></tr>
+        <tr><td>Cartao de credito</td><td>Necessario para verificacao, sem cobranca</td></tr>
+    </table>
+
+    <div class="warn-box">
+        <div class="warn-label">Atencao</div>
+        <p>A Oracle pede cartao de credito na criacao da conta para verificar identidade. <strong>Nao sera cobrada</strong> enquanto voce usar os recursos do Always Free. Porem, se criar recursos pagos (como VMs AMD maiores), sera cobrado. Fique atento ao criar apenas recursos Free.</p>
+    </div>
+
+    <!-- ===== CHAPTER 2: CRIAR CONTA ===== -->
+    <div class="chapter-header">
+        <div class="section-tag">Capitulo 2</div>
+        <div class="section-title">Criando a Conta na Oracle Cloud</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-title">Acesse o site da Oracle Cloud</div>
+        <p>Abra o navegador e va para:</p>
+        <div class="code-block"><span class="cmd">https://cloud.oracle.com/free</span></div>
+        <p>Clique no botao <strong>"Start for Free"</strong> ou <strong>"Comece gratuitamente"</strong>.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-title">Preencha seus dados pessoais</div>
+        <p>Informe nome, email e pais. Use um email valido porque a Oracle enviara um codigo de verificacao. Escolha <strong>Brasil</strong> como pais (ou onde preferir). O pais define a regiao do datacenter.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-title">Verifique o email</div>
+        <p>A Oracle enviara um codigo de verificacao para o email informado. Copie o codigo e cole no formulario. Este passo e obrigatorio e garante que voce e o dono do email.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">4</div>
+        <div class="step-title">Defina uma senha</div>
+        <p>Crie uma senha forte (minimo 12 caracteres, com maiuscula, minuscula, numero e caractere especial). Anote essa senha, voce precisara dela para acessar o painel da Oracle Cloud.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">5</div>
+        <div class="step-title">Adicione o cartao de credito</div>
+        <p>A Oracle exige cartao de credito para verificacao de identidade. <strong>Voce nao sera cobrado</strong>. A Oracle faz uma autorizacao temporaria de aproximadamente R$ 5 e depois estorna. Isso so acontece uma vez, para confirmar que o cartao e valido.</p>
+        <p>Cartoes pre-pagos internacionais e debito podem nao ser aceitos. Use cartao de credito se possivel.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">6</div>
+        <div class="step-title">Aguarde a ativacao</div>
+        <p>Apos preencher tudo, a Oracle analizara sua conta. Isso pode levar de <strong>5 minutos a 48 horas</strong>. Na maioria dos casos, leva menos de 30 minutos. Voce recebera um email quando a conta estiver ativa.</p>
+    </div>
+
+    <div class="ok-box">
+        <div class="ok-label">Pronto</div>
+        <p>Quando receber o email de confirmacao, sua conta Oracle Cloud estara ativa e voce podera acessar o painel em <strong>cloud.oracle.com</strong>.</p>
+    </div>
+
+    <!-- ===== CHAPTER 3: CRIAR VM ===== -->
+    <div class="chapter-header">
+        <div class="section-tag">Capitulo 3</div>
+        <div class="section-title">Criando a Maquina Virtual (VM)</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="body-text">
+        Agora vamos criar a maquina virtual gratuita que rodara o p3pp4. Recomendamos a VM ARM (Ampere) que oferece mais recursos no plano gratuito. O processo envolve navegar pelo painel da Oracle, escolher a configuracao correta e configurar o acesso SSH.
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-title">Acesse o menu de Compute</div>
+        <p>No painel da Oracle Cloud, clique no icone de menu (tres linhas horizontais, canto superior esquerdo). Va em <strong>Compute &gt; Instances</strong>.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-title">Crie uma nova instancia</div>
+        <p>Clique no botao <strong>"Create Instance"</strong>. A Oracle sugerira uma configuracao padrao. Voce precisara alterar alguns campos para usar o plano gratuito.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-title">Configure o nome e a imagem</div>
+        <p><strong>Name:</strong> Digite <code>p3pp4-server</code> (ou qualquer nome que preferir).</p>
+        <p><strong>Image:</strong> Clique em <strong>"Edit"</strong> ao lado de Image and Shape. Escolha <strong>Canonical Ubuntu 22.04</strong> (ou 24.04 se disponivel). Esta e a imagem mais compativel com Node.js e Playwright.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">4</div>
+        <div class="step-title">Escolha o Shape (tipo de VM) gratuito</div>
+        <p>Clique em <strong>"Change Shape"</strong>. Selecione <strong>VM.Standard.A1.Flex</strong> (ARM Ampere). Configure:</p>
+        <ul class="item-list">
+            <li><strong>OCPU:</strong> 1 (minimo necessario, voce pode escalar depois)</li>
+            <li><strong>Memory:</strong> 6 GB (ou 12 GB se quiser mais folga)</li>
+        </ul>
+        <p>Importante: O selo <strong>"Always Free eligible"</strong> deve aparecer ao lado do shape. Se nao aparecer, voce esta selecionando um recurso pago.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">5</div>
+        <div class="step-title">Configure a chave SSH</div>
+        <p>Na secao <strong>"Add SSH keys"</strong>, escolha <strong>"Generate a key pair"</strong>. A Oracle gerara duas chaves (publica e privada). Clique em <strong>"Save Private Key"</strong> e guarde o arquivo <code>.key</code> com seguranca. Essa e a unica vez que podera baixar essa chave.</p>
+        <p>Se preferir, pode usar uma chave SSH propria selecionando <strong>"Upload public key"</strong> e colando sua chave publica.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">6</div>
+        <div class="step-title">Configure o Boot Volume</div>
+        <p>O Boot Volume padrao de 47 GB e suficiente para o p3pp4. Se quiser mais espaco, clique em <strong>"Specify a custom boot volume size"</strong> e aumente ate 200 GB (limite gratuito). Nao altere outras opcoes.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">7</div>
+        <div class="step-title">Crie a instancia</div>
+        <p>Clique em <strong>"Create"</strong> no final da pagina. A Oracle criara a VM em poucos minutos. Quando o status mudar de <strong>"Provisioning"</strong> para <strong>"Running"</strong>, sua VM estara pronta.</p>
+        <p><strong>Anote o Public IP Address</strong> que aparece na pagina da instancia. Voce precisara dele para conectar via SSH.</p>
+    </div>
+
+    <div class="ok-box">
+        <div class="ok-label">VM Pronta</div>
+        <p>Sua VM esta rodando. Anote o IP publico e o caminho da chave SSH privada. Agora vamos conectar e configurar.</p>
+    </div>
+
+    <!-- ===== CHAPTER 4: CONECTAR VIA SSH ===== -->
+    <div class="chapter-header">
+        <div class="section-tag">Capitulo 4</div>
+        <div class="section-title">Conectando via SSH</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="body-text">
+        Para configurar a VM, voce precisa conectar a ela remotamente via SSH. O SSH e um protocolo seguro de acesso remoto. Voce usara o terminal do seu computador para enviar comandos para a VM na Oracle Cloud. O processo e simples, mas requer que a chave privada esteja com as permissoes corretas.
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-title">Abra o terminal no seu computador</div>
+        <p>No Windows, abra o <strong>PowerShell</strong> ou <strong>Terminal</strong>. No Mac ou Linux, abra o <strong>Terminal</strong> nativo.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-title">Ajuste as permissoes da chave SSH</div>
+        <p>A chave privada so funciona com permissoes restritas. Execute:</p>
+        <div class="code-block">chmod 400 ~/Downloads/ssh-key-*.key</div>
+        <p>Substitua o caminho pelo local onde salvou a chave privada no passo anterior.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-title">Conecte na VM</div>
+        <p>Execute o comando abaixo, substituindo o IP e o caminho da chave:</p>
+        <div class="code-block">ssh -i ~/Downloads/ssh-key-*.key ubuntu@<strong>SEU_IP_PUBLICO</strong></div>
+        <p>O usuario padrao da VM Ubuntu na Oracle Cloud e <code>ubuntu</code>. Na primeira conexao, digite <strong>yes</strong> quando perguntado sobre o fingerprint.</p>
+    </div>
+
+    <div class="ok-box">
+        <div class="ok-label">Conectado</div>
+        <p>Se voce vir o prompt <code>ubuntu@p3pp4-server:~$</code>, esta conectado com sucesso na sua VM!</p>
+    </div>
+
+    <!-- ===== CHAPTER 5: INSTALAR DEPENDENCIAS ===== -->
+    <div class="chapter-header">
+        <div class="section-tag">Capitulo 5</div>
+        <div class="section-title">Instalando as Dependencias</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="body-text">
+        Agora vamos instalar tudo que o p3pp4 precisa: Node.js, Python, Playwright, Prisma e as ferramentas do sistema. Execute cada comando um por vez no terminal conectado a VM. Este processo leva aproximadamente 10 a 15 minutos dependendo da velocidade da conexao.
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-title">Atualize o sistema</div>
+        <div class="code-block">sudo apt update && sudo apt upgrade -y</div>
+        <p>Este comando atualiza todos os pacotes do Ubuntu. Pode levar alguns minutos na primeira vez.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-title">Instale ferramentas basicas</div>
+        <div class="code-block">sudo apt install -y curl git wget unzip build-essential</div>
+        <p>Essas ferramentas sao necessarias para compilar pacotes nativos (como sharp e Prisma) e baixar outros instaladores.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-title">Instale o Node.js 20</div>
+        <div class="code-block">curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs</div>
+        <p>Isso instala o Node.js 20 LTS e o npm. Verifique com <code>node -v</code> e <code>npm -v</code>.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">4</div>
+        <div class="step-title">Instale o Python 3 e pip</div>
+        <div class="code-block">sudo apt install -y python3 python3-pip python3-venv</div>
+        <p>O solver do p3pp4 roda em Python. Verifique com <code>python3 --version</code>.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">5</div>
+        <div class="step-title">Instale o Playwright (navegador headless)</div>
+        <div class="code-block">sudo npx playwright install --with-deps chromium</div>
+        <p>Este comando instala o navegador Chromium e todas as dependencias do sistema que o Playwright precisa. E o passo mais demorado (pode levar 3 a 5 minutos). O argumento <code>--with-deps</code> instala automaticamente as bibliotecas nativas do Ubuntu que o Chromium precisa.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">6</div>
+        <div class="step-title">Instale o z-ai CLI</div>
+        <div class="code-block">sudo npm install -g z-ai-web-dev-sdk</div>
+        <p>Este e o SDK de IA utilizado pelo solver para analise visual e calculos. Apos a instalacao, verifique com <code>z-ai --version</code>.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">7</div>
+        <div class="step-title">Instale dependencias do Playwright para Python</div>
+        <div class="code-block">pip3 install playwright
+python3 -m playwright install chromium</div>
+        <p>O solver Python tambem usa Playwright diretamente. Isso instala o binding Python e o navegador Chromium para ele.</p>
+    </div>
+
+    <!-- ===== CHAPTER 6: DEPLOY DO PROJETO ===== -->
+    <div class="chapter-header">
+        <div class="section-tag">Capitulo 6</div>
+        <div class="section-title">Fazendo o Deploy do p3pp4</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="body-text">
+        Agora vamos clonar o repositorio do p3pp4 do GitHub, instalar as dependencias Node.js, configurar o banco de dados e rodar o projeto. Este e o passo principal onde o seu projeto fica online.
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-title">Clone o repositorio</div>
+        <div class="code-block">cd ~
+git clone https://github.com/SrBatat/p3pp0.git p3pp4
+cd p3pp4</div>
+        <p>Isso baixa todo o codigo do seu repositorio GitHub para a VM.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-title">Instale as dependencias Node.js</div>
+        <div class="code-block">npm install</div>
+        <p>Este comando instala todas as bibliotecas listadas no <code>package.json</code>. Pode levar 2 a 5 minutos porque compila pacotes nativos como sharp e Prisma.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-title">Configure as variaveis de ambiente</div>
+        <div class="code-block">cp .env.example .env</div>
+        <p>Depois edite o <code>.env</code> para o caminho correto do banco:</p>
+        <div class="code-block">DATABASE_URL="file:./db/custom.db"</div>
+        <p>O arquivo <code>.env</code> nao esta no GitHub (esta no .gitignore), entao voce precisa cria-lo manualmente na VM a partir do template <code>.env.example</code>.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">4</div>
+        <div class="step-title">Crie o diretorio do banco e gere o Prisma Client</div>
+        <div class="code-block">mkdir -p db
+npx prisma generate
+npx prisma db push</div>
+        <p>O <code>prisma generate</code> cria o client do Prisma. O <code>prisma db push</code> cria o arquivo SQLite do banco de dados. Sem isso, a aplicacao falha ao tentar acessar o banco.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">5</div>
+        <div class="step-title">Crie os diretorios necessarios</div>
+        <div class="code-block">mkdir -p download/physics-bot/screenshots
+mkdir -p upload</div>
+        <p>Esses diretorios sao usados pelo solver para salvar screenshots e arquivos temporarios. Eles estao no <code>.gitignore</code>, entao nao vem do GitHub.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">6</div>
+        <div class="step-title">Adapte os caminhos do projeto</div>
+        <p>Os caminhos hardcoded <code>/home/z/my-project</code> precisam ser alterados para <code>/home/ubuntu/p3pp4</code>. Edite os seguintes arquivos na VM:</p>
+        <div class="code-block"><span class="comment"># No arquivo scripts/physics_bot.py:</span>
+<span class="comment"># Altere a linha:</span>
+OUTPUT_DIR = Path("/home/z/my-project/download/physics-bot")
+<span class="comment"># Para:</span>
+OUTPUT_DIR = Path("/home/ubuntu/p3pp4/download/physics-bot")</div>
+        <div class="code-block"><span class="comment"># No arquivo src/app/api/solve/start/route.ts:</span>
+<span class="comment"># Altere todas as ocorrencias de:</span>
+/home/z/my-project
+<span class="comment"># Para:</span>
+/home/ubuntu/p3pp4</div>
+        <p>Para editar rapidamente, use o comando <code>nano</code>:</p>
+        <div class="code-block">nano scripts/physics_bot.py
+<span class="comment"># Ctrl+W para buscar, Ctrl+O para salvar, Ctrl+X para sair</span></div>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">7</div>
+        <div class="step-title">Remova output: standalone do next.config.ts</div>
+        <p>Edite o arquivo <code>next.config.ts</code> e remova a linha <code>output: "standalone"</code>. Deixe assim:</p>
+        <div class="code-block">const nextConfig: NextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  reactStrictMode: false,
+};</div>
+        <p>O modo standalone e para Docker. Para rodar diretamente na VM, usaremos o modo padrao do Next.js.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">8</div>
+        <div class="step-title">Build do projeto</div>
+        <div class="code-block">npm run build</div>
+        <p>Este comando compila o Next.js. Se der erro de TypeScript, verifique se <code>ignoreBuildErrors: true</code> esta no <code>next.config.ts</code>. O build pode levar 1 a 3 minutos.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">9</div>
+        <div class="step-title">Rode o projeto</div>
+        <div class="code-block">npm run start &amp;</div>
+        <p>O <code>&amp;</code> no final roda o processo em background. O servidor estara disponivel em <strong>http://SEU_IP_PUBLICO:3000</strong>. Porem, voce ainda precisa abrir a porta 3000 no firewall (veja o proximo capitulo).</p>
+    </div>
+
+    <!-- ===== CHAPTER 7: FIREWALL ===== -->
+    <div class="chapter-header">
+        <div class="section-tag">Capitulo 7</div>
+        <div class="section-title">Configurando o Firewall e Acesso</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="body-text">
+        A Oracle Cloud tem <strong>dois firewalls</strong>: um no nivel da rede (Security List / Network Security Group) e outro no nivel da VM (iptables). Voce precisa liberar a porta 3000 em ambos para conseguir acessar o p3pp4 pelo navegador. Alem disso, para producao, e recomendado configurar o Caddy como proxy reverso na porta 80/443 com HTTPS automatico.
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-title">Libere a porta no Security List (Oracle Cloud)</div>
+        <p>No painel da Oracle Cloud, va em <strong>Networking &gt; Virtual Cloud Networks</strong>. Clique no VCN que foi criado automaticamente com a VM. Va em <strong>Security Lists</strong> e clique no security list padrao.</p>
+        <p>Clique em <strong>"Add Ingress Rules"</strong> e preencha:</p>
+        <ul class="item-list">
+            <li><strong>Source Type:</strong> CIDR</li>
+            <li><strong>Source CIDR:</strong> <code>0.0.0.0/0</code></li>
+            <li><strong>IP Protocol:</strong> TCP</li>
+            <li><strong>Destination Port Range:</strong> <code>3000</code></li>
+        </ul>
+        <p>Clique em <strong>"Add Ingress Rules"</strong>. Se quiser usar Caddy na porta 80/443 depois, libere tambem as portas <code>80,443</code>.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-title">Libere a porta no iptables (dentro da VM)</div>
+        <p>A Oracle Cloud configura iptables restritivo por padrao. Execute na VM:</p>
+        <div class="code-block">sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 3000 -j ACCEPT
+sudo netfilter-persistent save</div>
+        <p>Se der erro no <code>netfilter-persistent</code>, instale com:</p>
+        <div class="code-block">sudo apt install -y iptables-persistent</div>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-title">Teste o acesso</div>
+        <p>Abra o navegador no seu computador e acesse:</p>
+        <div class="code-block">http://SEU_IP_PUBLICO:3000</div>
+        <p>Se tudo estiver correto, voce vera a interface gótica dark do p3pp4!</p>
+    </div>
+
+    <!-- ===== CHAPTER 8: HTTPS COM CADDY ===== -->
+    <div class="chapter-header">
+        <div class="section-tag">Capitulo 8</div>
+        <div class="section-title">HTTPS com Caddy (Opcional)</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="body-text">
+        Para ter HTTPS automatico e um dominio personalizado, instale o <strong>Caddy</strong>. Ele funciona como proxy reverso: recebe requisicoes na porta 80/443 e redireciona para o Next.js na porta 3000. O Caddy gera certificado SSL automaticamente via Let's Encrypt, sem nenhuma configuracao manual.
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-title">Instale o Caddy</div>
+        <div class="code-block">sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo apt update
+sudo apt install caddy</div>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-title">Configure o Caddyfile</div>
+        <p>Se voce tem um dominio (ex: <code>p3pp4.com.br</code>), aponte o DNS A para o IP da VM. Depois edite o Caddyfile:</p>
+        <div class="code-block">sudo nano /etc/caddy/Caddyfile</div>
+        <p>Substitua o conteudo por:</p>
+        <div class="code-block"><span class="comment"># Com dominio (HTTPS automatico):</span>
+p3pp4.com.br {
+    reverse_proxy localhost:3000
+}
+
+<span class="comment"># Sem dominio (so HTTP):</span>
+:80 {
+    reverse_proxy localhost:3000
+}</div>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-title">Reinicie o Caddy</div>
+        <div class="code-block">sudo systemctl restart caddy</div>
+        <p>Se estiver usando dominio, acesse <code>https://p3pp4.com.br</code>. O Caddy obtera automaticamente o certificado SSL. Se estiver sem dominio, acesse <code>http://SEU_IP_PUBLICO</code>.</p>
+    </div>
+
+    <div class="warn-box">
+        <div class="warn-label">Lembrete</div>
+        <p>Se usar dominio, libere as portas 80 e 443 no Security List e no iptables da mesma forma que abriu a porta 3000. O Caddy precisa dessas portas para HTTPS funcionar.</p>
+    </div>
+
+    <!-- ===== CHAPTER 9: MANTER RODANDO ===== -->
+    <div class="chapter-header">
+        <div class="section-tag">Capitulo 9</div>
+        <div class="section-title">Mantendo o Servidor Rodando</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="body-text">
+        Se voce rodar <code>npm run start</code> manualmente, o servidor morre quando voce fecha o terminal. Para manter o p3pp4 rodando permanentemente (mesmo apos reiniciar a VM), use o <strong>systemd</strong> — o gerenciador de servicos padrao do Ubuntu. Ele reinicia automaticamente o p3pp4 se ele travar e inicia junto com o boot da VM.
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-title">Crie o servico do systemd</div>
+        <div class="code-block">sudo nano /etc/systemd/system/p3pp4.service</div>
+        <p>Cole o seguinte conteudo:</p>
+        <div class="code-block">[Unit]
+Description=p3pp4 Physics Solver
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/p3pp4
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target</div>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-title">Ative e inicie o servico</div>
+        <div class="code-block">sudo systemctl daemon-reload
+sudo systemctl enable p3pp4
+sudo systemctl start p3pp4</div>
+        <p>O <code>enable</code> faz o p3pp4 iniciar automaticamente quando a VM reiniciar. O <code>start</code> inicia agora.</p>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-title">Verifique o status</div>
+        <div class="code-block">sudo systemctl status p3pp4</div>
+        <p>Deve mostrar <strong>"active (running)"</strong>. Se mostrar erro, verifique os logs:</p>
+        <div class="code-block">sudo journalctl -u p3pp4 -f</div>
+    </div>
+
+    <div class="ok-box">
+        <div class="ok-label">Servidor Permanente</div>
+        <p>Agora o p3pp4 roda 24/7, reinicia automaticamente se travar, e sobe junto com a VM. Voce pode fechar o terminal sem preocupacao.</p>
+    </div>
+
+    <!-- ===== CHAPTER 10: COMANDOS UTEIS ===== -->
+    <div class="chapter-header">
+        <div class="section-tag">Capitulo 10</div>
+        <div class="section-title">Comandos Uteis do Dia a Dia</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="body-text">
+        Aqui estao os comandos que voce usara frequentemente para gerenciar o p3pp4 no servidor. Guarde esta referencia para consultas futuras. Todos devem ser executados via SSH conectado na VM.
+    </div>
+
+    <table class="info-table">
+        <tr><th>Acao</th><th>Comando</th></tr>
+        <tr><td>Ver status do p3pp4</td><td><code>sudo systemctl status p3pp4</code></td></tr>
+        <tr><td>Reiniciar o p3pp4</td><td><code>sudo systemctl restart p3pp4</code></td></tr>
+        <tr><td>Parar o p3pp4</td><td><code>sudo systemctl stop p3pp4</code></td></tr>
+        <tr><td>Ver logs em tempo real</td><td><code>sudo journalctl -u p3pp4 -f</code></td></tr>
+        <tr><td>Ver logs do Caddy</td><td><code>sudo journalctl -u caddy -f</code></td></tr>
+        <tr><td>Atualizar o projeto</td><td><code>cd ~/p3pp4 &amp;&amp; git pull &amp;&amp; npm install &amp;&amp; npm run build &amp;&amp; sudo systemctl restart p3pp4</code></td></tr>
+        <tr><td>Ver uso de memoria</td><td><code>free -h</code></td></tr>
+        <tr><td>Ver uso de disco</td><td><code>df -h</code></td></tr>
+        <tr><td>Ver processos rodando</td><td><code>htop</code> ou <code>top</code></td></tr>
+        <tr><td>Reiniciar a VM inteira</td><td><code>sudo reboot</code></td></tr>
+    </table>
+
+    <div class="step-card">
+        <div class="step-title">Como atualizar o p3pp4</div>
+        <p>Quando voce fizer alteracoes no GitHub, atualize a VM com:</p>
+        <div class="code-block">cd ~/p3pp4
+git pull origin main
+npm install
+npm run build
+sudo systemctl restart p3pp4</div>
+        <p>Isso baixa as mudancas, reinstala dependencias (se houver novas), refaz o build e reinicia o servico. Leva cerca de 1 a 2 minutos.</p>
+    </div>
+
+    <!-- ===== CHAPTER 11: RESOLUCAO DE PROBLEMAS ===== -->
+    <div class="chapter-header">
+        <div class="section-tag">Capitulo 11</div>
+        <div class="section-title">Resolucao de Problemas</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="body-text">
+        Se algo nao funcionar, verifique estes problemas comuns. A maioria dos erros acontece nas primeiras configuracoes e sao faceis de resolver. Sempre verifique os logs primeiro com <code>sudo journalctl -u p3pp4 -f</code> para identificar a causa real do erro.
+    </div>
+
+    <table class="info-table">
+        <tr><th>Problema</th><th>Causa Provavel</th><th>Solucao</th></tr>
+        <tr>
+            <td>Nao consigo acessar http://IP:3000</td>
+            <td>Firewall bloqueando</td>
+            <td>Verifique Security List + iptables. Veja Capitulo 7.</td>
+        </tr>
+        <tr>
+            <td>Erro "Cannot find module"</td>
+            <td>Dependencias faltando</td>
+            <td>Rode <code>npm install</code> novamente.</td>
+        </tr>
+        <tr>
+            <td>Erro Prisma "P1001"</td>
+            <td>Banco nao existe</td>
+            <td>Rode <code>npx prisma db push</code>.</td>
+        </tr>
+        <tr>
+            <td>Playwright falha "Browser not found"</td>
+            <td>Chromium nao instalado</td>
+            <td>Rode <code>sudo npx playwright install --with-deps chromium</code>.</td>
+        </tr>
+        <tr>
+            <td>Solver retorna erro 502</td>
+            <td>Timeout do processo</td>
+            <td>A arquitetura assincrona ja resolve isso. Verifique se o Python esta funcionando com <code>python3 scripts/physics_bot.py</code>.</td>
+        </tr>
+        <tr>
+            <td>VM nao responde</td>
+            <td>Instancia parada</td>
+            <td>No painel Oracle, va em Compute &gt; Instances e clique em Start.</td>
+        </tr>
+        <tr>
+            <td>z-ai: comando nao encontrado</td>
+            <td>SDK nao instalado globalmente</td>
+            <td>Rode <code>sudo npm install -g z-ai-web-dev-sdk</code>.</td>
+        </tr>
+        <tr>
+            <td>Cadastro Oracle rejeitado</td>
+            <td>Cartao nao aceito</td>
+            <td>Tente outro cartao ou contate o suporte Oracle.</td>
+        </tr>
+    </table>
+
+    <div class="warn-box">
+        <div class="warn-label">Dica Importante</div>
+        <p>A Oracle Cloud pode reciclar (parar) VMs gratuitas que ficam muito tempo sem uso. Se sua VM parar, basta iniciar novamente pelo painel. Para evitar isso, configure um ping automatico ou um cronjob que mantenha a VM ativa.</p>
+    </div>
+
+</div>
+
+<!-- ==================== ENDING ==================== -->
+<div class="ending">
+    <div class="ending-icon">🔮</div>
+    <div class="ending-text">p3pp4 esta no ar!</div>
+    <div class="ending-sub">Seu Physics Aviary Solver esta rodando gratuitamente na Oracle Cloud. Divirta-se resolvendo simuladores!</div>
+    <div class="ending-link">github.com/SrBatat/p3pp0</div>
+</div>
+
+</body>
+</html>
