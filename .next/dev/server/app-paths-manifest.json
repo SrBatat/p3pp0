@@ -1,3 +1,5 @@
 {
+  "/api/solve/start/route": "app/api/solve/start/route.js",
+  "/api/solve/status/route": "app/api/solve/status/route.js",
   "/page": "app/page.js"
 }

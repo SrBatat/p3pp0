@@ -1167,3 +1167,25 @@ https://nextjs.org/docs/messages/module-not-found
 ✓ Compiled in 125ms
  GET / 200 in 155ms (compile: 49ms, render: 106ms)
  GET / 200 in 22ms (compile: 3ms, render: 19ms)
+ GET / 200 in 88ms (compile: 4ms, render: 84ms)
+ GET / 200 in 42ms (compile: 3ms, render: 39ms)
+ GET / 200 in 40ms (compile: 3ms, render: 36ms)
+⚠ Cross origin request detected from preview-chat-04b07e4e-e83d-4f8d-9c3e-fb894780af65.space-z.ai to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+prisma:query INSERT INTO `main`.`SolverSession` (`id`, `url`, `userName`, `status`, `createdAt`, `updatedAt`) VALUES (?,?,?,?,?,?) RETURNING `id` AS `id`, `url` AS `url`, `userName` AS `userName`, `status` AS `status`, `simulatorType` AS `simulatorType`, `enunciado` AS `enunciado`, `variaveis` AS `variaveis`, `calculos` AS `calculos`, `respostas` AS `respostas`, `respostasCorretas` AS `respostasCorretas`, `resultado` AS `resultado`, `metodo` AS `metodo`, `screenshotUrl` AS `screenshotUrl`, `createdAt` AS `createdAt`, `updatedAt` AS `updatedAt`
+ POST /api/solve/start 200 in 282ms (compile: 165ms, render: 117ms)
+prisma:query UPDATE `main`.`SolverSession` SET `status` = ?, `simulatorType` = ?, `enunciado` = ?, `variaveis` = ?, `calculos` = ?, `respostas` = ?, `respostasCorretas` = ?, `resultado` = ?, `metodo` = ?, `screenshotUrl` = ?, `updatedAt` = ? WHERE (`main`.`SolverSession`.`id` = ? AND 1=1) RETURNING `id` AS `id`, `url` AS `url`, `userName` AS `userName`, `status` AS `status`, `simulatorType` AS `simulatorType`, `enunciado` AS `enunciado`, `variaveis` AS `variaveis`, `calculos` AS `calculos`, `respostas` AS `respostas`, `respostasCorretas` AS `respostasCorretas`, `resultado` AS `resultado`, `metodo` AS `metodo`, `screenshotUrl` AS `screenshotUrl`, `createdAt` AS `createdAt`, `updatedAt` AS `updatedAt`
+prisma:query SELECT `main`.`SolverSession`.`id`, `main`.`SolverSession`.`url`, `main`.`SolverSession`.`userName`, `main`.`SolverSession`.`status`, `main`.`SolverSession`.`simulatorType`, `main`.`SolverSession`.`enunciado`, `main`.`SolverSession`.`variaveis`, `main`.`SolverSession`.`calculos`, `main`.`SolverSession`.`respostas`, `main`.`SolverSession`.`respostasCorretas`, `main`.`SolverSession`.`resultado`, `main`.`SolverSession`.`metodo`, `main`.`SolverSession`.`screenshotUrl`, `main`.`SolverSession`.`createdAt`, `main`.`SolverSession`.`updatedAt` FROM `main`.`SolverSession` WHERE (`main`.`SolverSession`.`id` = ? AND 1=1) LIMIT ? OFFSET ?
+ GET /api/solve/status?id=cmqtdygyf0000p6umy64jrawm 200 in 91ms (compile: 81ms, render: 10ms)
+ GET / 200 in 51ms (compile: 4ms, render: 47ms)
+ GET / 200 in 39ms (compile: 3ms, render: 37ms)
+ GET / 200 in 36ms (compile: 3ms, render: 33ms)
+✓ Compiled in 182ms
+✓ Compiled in 121ms
+✓ Compiled in 65ms
+✓ Compiled in 57ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 210ms (compile: 67ms, render: 143ms)
+ GET / 200 in 42ms (compile: 3ms, render: 38ms)

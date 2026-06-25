@@ -1,0 +1,890 @@
+     1→#!/usr/bin/env python3
+     2→"""
+     3→==========================================================
+     4→  PHYSICS BOT v2 - Resolvedor Automático de Simuladores
+     5→  Usa Playwright + Z.AI (GLM) + Vision (VLM)
+     6→  para resolver simuladores de física automaticamente.
+     7→  100% Gratuito. Zero configuração.
+     8→==========================================================
+     9→"""
+    10→
+    11→import base64
+    12→import json
+    13→import os
+    14→import re
+    15→import subprocess
+    16→import sys
+    17→import time
+    18→from datetime import datetime
+    19→from pathlib import Path
+    20→
+    21→# ====================================================================
+    22→# CONFIGURAÇÃO
+    23→# ====================================================================
+    24→OUTPUT_DIR = Path("/home/z/my-project/download/physics-bot")
+    25→OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    26→
+    27→SCREENSHOT_DIR = OUTPUT_DIR / "screenshots"
+    28→SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
+    29→
+    30→LOG_FILE = OUTPUT_DIR / "log_calculos.txt"
+    31→
+    32→
+    33→# ====================================================================
+    34→# 1. CÉREBRO - Z.AI Chat (gratuito via CLI)
+    35→# ====================================================================
+    36→
+    37→def chat_ia(prompt, sistema=""):
+    38→    """Chama o Z.AI (GLM) via CLI. Retorna o texto da resposta."""
+    39→    try:
+    40→        cmd = ["z-ai", "chat", "--prompt", prompt, "--output", str(OUTPUT_DIR / "_chat.json")]
+    41→        if sistema:
+    42→            cmd.extend(["--system", sistema])
+    43→
+    44→        subprocess.run(cmd, capture_output=True, text=True, timeout=90)
+    45→
+    46→        resp_file = OUTPUT_DIR / "_chat.json"
+    47→        if resp_file.exists():
+    48→            with open(resp_file, "r", encoding="utf-8") as f:
+    49→                data = json.load(f)
+    50→            if isinstance(data, dict):
+    51→                if "choices" in data:
+    52→                    return data["choices"][0]["message"]["content"].strip()
+    53→                if "content" in data:
+    54→                    return data["content"].strip()
+    55→                if "data" in data and isinstance(data["data"], dict):
+    56→                    if "content" in data["data"]:
+    57→                        return data["data"]["content"].strip()
+    58→                    if "choices" in data["data"]:
+    59→                        return data["data"]["choices"][0]["message"]["content"].strip()
+    60→            return str(data)
+    61→        return ""
+    62→    except Exception as e:
+    63→        print(f"[IA] Erro no chat: {e}")
+    64→        return ""
+    65→
+    66→
+    67→def resolver_com_ia(enunciado, contexto_extra=""):
+    68→    """
+    69→    Usa a IA para resolver o problema de fisica.
+    70→    Retorna: (conta_resumida, resposta_numerica, resposta_completa)
+    71→    """
+    72→    print("\n[IA] Enviando para o GLM calcular...")
+    73→
+    74→    prompt_sistema = """Voce e um expert em fisica e matematica. Resolva o problema passo a passo.
+    75→Sua resposta DEVE seguir EXATAMENTE este formato:
+    76→
+    77→CONTA: [Escreva aqui a conta resumida com todos os passos]
+    78→RESPOSTA: [Apenas numeros finais, sem unidades, use ponto para decimal]
+    79→
+    80→Regras:
+    81→- Se houver mais de uma resposta, separe por ponto e virgula: RESPOSTA: 5.23;68.77
+    82→- Arredonde para 2 casas decimais
+    83→- Use ponto (.) como separador decimal, NUNCA virgula
+    84→- NAO inclua unidades na linha RESPOSTA
+    85→- Para notacao cientifica use formato: 1.5e3
+    86→- Se o problema pedir tempo, responda em segundos. Se pedir distancia, em metros."""
+    87→
+    88→    pergunta = enunciado
+    89→    if contexto_extra:
+    90→        pergunta += f"\n\nDados extraidos da pagina:\n{contexto_extra}"
+    91→
+    92→    texto = chat_ia(pergunta, prompt_sistema)
+    93→    if not texto:
+    94→        return "Sem resposta", "Erro", ""
+    95→
+    96→    print(f"[IA] Resposta bruta: {texto[:300]}")
+    97→
+    98→    # Parse
+    99→    conta = "Nao extraido"
+   100→    resposta_num = "Erro"
+   101→
+   102→    if "CONTA:" in texto and "RESPOSTA:" in texto:
+   103→        partes = texto.split("RESPOSTA:")
+   104→        conta = partes[0].replace("CONTA:", "").strip()
+   105→        resposta_num = partes[1].strip().split("\n")[0].strip()
+   106→    elif "RESPOSTA:" in texto:
+   107→        partes = texto.split("RESPOSTA:")
+   108→        conta = texto.split("RESPOSTA:")[0].strip()
+   109→        resposta_num = partes[1].strip().split("\n")[0].strip()
+   110→    else:
+   111→        conta = texto[:300]
+   112→        nums = re.findall(r'[-+]?\d*\.\d+|\d+', texto)
+   113→        if nums:
+   114→            resposta_num = ";".join(nums[-2:])  # pega os ultimos numeros
+   115→
+   116→    return conta, resposta_num, texto
+   117→
+   118→
+   119→# ====================================================================
+   120→# 2. OLHOS - Z.AI Vision (le o canvas com VLM)
+   121→# ====================================================================
+   122→
+   123→def ler_imagem_com_vlm(caminho_imagem, prompt):
+   124→    """Usa o VLM (vision) para analisar uma imagem."""
+   125→    try:
+   126→        result = subprocess.run(
+   127→            ["z-ai", "vision", "--prompt", prompt,
+   128→             "--image", str(caminho_imagem),
+   129→             "--output", str(OUTPUT_DIR / "_vlm.json")],
+   130→            capture_output=True, text=True, timeout=60
+   131→        )
+   132→
+   133→        resp_file = OUTPUT_DIR / "_vlm.json"
+   134→        if resp_file.exists():
+   135→            with open(resp_file, "r", encoding="utf-8") as f:
+   136→                data = json.load(f)
+   137→            if isinstance(data, dict):
+   138→                if "choices" in data:
+   139→                    return data["choices"][0]["message"]["content"].strip()
+   140→                if "content" in data:
+   141→                    return data["content"].strip()
+   142→            return str(data)
+   143→        return ""
+   144→    except Exception as e:
+   145→        print(f"[VLM] Erro: {e}")
+   146→        return ""
+   147→
+   148→
+   149→# ====================================================================
+   150→# 3. DETECTOR DE SIMULADOR
+   151→# ====================================================================
+   152→
+   153→def detectar_simulador(url, pagina):
+   154→    """Detecta o tipo de simulador baseado na URL e no conteudo da pagina."""
+   155→    if "thephysicsaviary.com" in url:
+   156→        return "physics_aviary"
+   157→
+   158→    # Checa se tem os elementos tipicos do Physics Aviary
+   159→    try:
+   160→        if pagina.locator("#BeginButton").count() > 0:
+   161→            return "physics_aviary"
+   162→        if pagina.locator("#SubmitButton").count() > 0:
+   163→            return "physics_aviary"
+   164→    except:
+   165→        pass
+   166→
+   167→    return "generico"
+   168→
+   169→
+   170→# ====================================================================
+   171→# 4. CALCULO DIRETO (sem IA) - Physics Aviary
+   172→# ====================================================================
+   173→
+   174→def calcular_direto_physics_aviary(variaveis, titulo=""):
+   175→    """
+   176→    Calcula as respostas diretamente a partir das variaveis JS.
+   177→    Retorna dict com as respostas calculadas e as formulas.
+   178→    """
+   179→    resultado = {"respostas": [], "formulas": [], "passos": []}
+   180→
+   181→    v = variaveis.get("StartingSpeed") or variaveis.get("InitialVelocity") or variaveis.get("Velocity")
+   182→    mu = (variaveis.get("CoefficientOfFriction")
+   183→          or variaveis.get("CoefficientOfKineticFriction")
+   184→          or variaveis.get("mu") or variaveis.get("muK"))
+   185→    m = variaveis.get("MassOfCar") or variaveis.get("Mass") or variaveis.get("m")
+   186→    g = 9.8
+   187→
+   188→    # --- Car Stopping Problem ---
+   189→    if v is not None and mu is not None:
+   190→        aceleracao = mu * g
+   191→        tempo = v / aceleracao
+   192→        distancia = (v / 2) * tempo
+   193→
+   194→        resultado["respostas"] = [f"{tempo:.2f}", f"{distancia:.2f}"]
+   195→        resultado["formulas"] = [
+   196→            f"a = mu * g = {mu} * {g} = {aceleracao:.4f} m/s^2",
+   197→            f"t = v / a = {v} / {aceleracao:.4f} = {tempo:.4f} s",
+   198→            f"d = (v/2) * t = ({v}/2) * {tempo:.4f} = {distancia:.4f} m"
+   199→        ]
+   200→        resultado["passos"] = [
+   201→            f"1. Velocidade inicial: v = {v} m/s",
+   202→            f"2. Coeficiente de atrito: mu = {mu}",
+   203→            f"3. Aceleracao de frenagem: a = mu * g = {mu} * {g} = {aceleracao:.4f} m/s^2",
+   204→            f"4. Tempo para parar: t = v / a = {v} / {aceleracao:.4f} = {tempo:.4f} s",
+   205→            f"5. Distancia percorrida: d = v^2/(2*a) = {v}^2/(2*{aceleracao:.4f}) = {distancia:.4f} m"
+   206→        ]
+   207→        return resultado
+   208→
+   209→    # --- Jolly Gas Giant Problem ---
+   210→    OrbitRadiusm = variaveis.get("OrbitRadiusm")
+   211→    MoonMass = variaveis.get("MoonMass")
+   212→    AngularSpeed = variaveis.get("AngularSpeed")
+   213→
+   214→    if OrbitRadiusm is not None and MoonMass is not None and AngularSpeed is not None:
+   215→        import math as _math
+   216→        G_val = 6.67e-11
+   217→
+   218→        PeriodInHours = 2 * _math.pi / AngularSpeed
+   219→        PeriodInSeconds = PeriodInHours * 3600
+   220→        OrbitCircumference = 2 * _math.pi * OrbitRadiusm
+   221→        Speed = OrbitCircumference / PeriodInSeconds
+   222→        Acceleration = Speed**2 / OrbitRadiusm
+   223→        ForceGravity = MoonMass * Acceleration
+   224→        PlanetMass = ForceGravity * OrbitRadiusm**2 / (G_val * MoonMass)
+   225→
+   226→        resultado["respostas"] = [f"{PeriodInHours:.2f}", f"{Speed:.0f}", f"{PlanetMass:.2e}"]
+   227→        resultado["formulas"] = [
+   228→            f"T = 2*pi / AngularSpeed = 2*pi / {AngularSpeed:.6f} = {PeriodInHours:.4f} h",
+   229→            f"v = 2*pi*r / T(seg) = 2*pi*{OrbitRadiusm:.2e} / {PeriodInSeconds:.2f} = {Speed:.2f} m/s",
+   230→            f"M = v^2 * r / G = {Speed:.2f}^2 * {OrbitRadiusm:.2e} / {G_val} = {PlanetMass:.4e} kg"
+   231→        ]
+   232→        resultado["passos"] = [
+   233→            f"1. Raio orbital: r = {OrbitRadiusm:.2e} m",
+   234→            f"2. Massa da lua: m_lua = {MoonMass:.2e} kg",
+   235→            f"3. Velocidade angular: w = {AngularSpeed:.6f} rad/h",
+   236→            f"4. Periodo: T = 2*pi/w = {PeriodInHours:.4f} h",
+   237→            f"5. Velocidade orbital: v = 2*pi*r/T = {Speed:.2f} m/s",
+   238→            f"6. Massa do planeta: M = v^2*r/G = {PlanetMass:.4e} kg"
+   239→        ]
+   240→        return resultado
+   241→
+   242→    # --- Incline Problem ---
+   243→    theta = variaveis.get("Angle") or variaveis.get("theta") or variaveis.get("InclineAngle") or variaveis.get("AngleOfIncline")
+   244→    mu_incline = variaveis.get("coefficientoffriction") or variaveis.get("CoefficientOfFriction") or variaveis.get("muK")
+   245→    m_slide = variaveis.get("SlidingMass") or variaveis.get("Mass")
+   246→    m_hang = variaveis.get("MassHanging")
+   247→    g = 9.8
+   248→
+   249→    if theta is not None and mu_incline is not None and m_slide is not None and m_hang is not None:
+   250→        import math as _math2
+   251→        theta_rad = _math2.radians(theta) if theta > 3.14 else theta  # se > pi, já é radianos
+   252→        # Força gravitacional paralela ao plano
+   253→        Fgx = m_slide * g * _math2.sin(theta_rad)
+   254→        # Força de atrito
+   255→        Fn = m_slide * g * _math2.cos(theta_rad)
+   256→        Ff = mu_incline * Fn
+   257→        # Força líquida (considerando a massa pendurada)
+   258→        # Se a caixa desce o plano: F_liq = m_hang*g - Fgx + Ff (ou -Ff se sobe)
+   259→        # Determinar direção: comparar Fgx com m_hang*g
+   260→        F_hang = m_hang * g
+   261→        if Fgx > F_hang:
+   262→            # Caixa desce o plano, atrito sobe
+   263→            F_liq = Fgx - F_hang - Ff
+   264→        else:
+   265→            # Massa pendurada puxa a caixa pra cima, atrito desce
+   266→            F_liq = F_hang - Fgx - Ff
+   267→        massa_total = m_slide + m_hang
+   268→        aceleracao = F_liq / massa_total
+   269→        # Tensão no fio
+   270→        T = m_hang * (g - aceleracao) if F_hang > Fgx else m_hang * (g + aceleracao)
+   271→        
+   272→        # Verificar sinal da aceleração: negativa se desce o plano
+   273→        if Fgx > F_hang:
+   274→            aceleracao = -abs(aceleracao)
+   275→        else:
+   276→            aceleracao = abs(aceleracao)
+   277→
+   278→        resultado["respostas"] = [f"{aceleracao:.2f}", f"{abs(T):.2f}"]
+   279→        resultado["formulas"] = [
+   280→            f"Fgx = m*g*sin(theta) = {m_slide}*{g}*sin({theta}) = {Fgx:.4f} N",
+   281→            f"Ff = mu*m*g*cos(theta) = {mu_incline}*{m_slide}*{g}*cos({theta}) = {Ff:.4f} N",
+   282→            f"F_hang = m_hang*g = {m_hang}*{g} = {F_hang:.4f} N",
+   283→            f"a = F_liq / (m1+m2) = {F_liq:.4f} / {massa_total} = {aceleracao:.4f} m/s^2",
+   284→            f"T = {abs(T):.4f} N"
+   285→        ]
+   286→        resultado["passos"] = [
+   287→            f"1. Angulo: theta = {theta} graus",
+   288→            f"2. Massa deslizante: m1 = {m_slide} kg",
+   289→            f"3. Massa pendurada: m2 = {m_hang} kg",
+   290→            f"4. Coeficiente de atrito: mu = {mu_incline}",
+   291→            f"5. Fgx = m1*g*sin(theta) = {Fgx:.4f} N",
+   292→            f"6. Ff = mu*m1*g*cos(theta) = {Ff:.4f} N",
+   293→            f"7. F_hang = m2*g = {F_hang:.4f} N",
+   294→            f"8. Aceleracao: a = {aceleracao:.4f} m/s^2",
+   295→            f"9. Tensao: T = {abs(T):.4f} N"
+   296→        ]
+   297→        return resultado
+   298→
+   299→    # --- Friction to Projectile Problem ---
+   300→    StartSpeed = variaveis.get("StartSpeed")
+   301→    HeightOfLabTable = variaveis.get("HeightOfLabTable")
+   302→    TableDistance = variaveis.get("TableDistance")
+   303→    CoF = variaveis.get("CoefficientOfFriction")
+   304→    MassBox = variaveis.get("MassOfBox")
+   305→    GravField = variaveis.get("GravitationalField") or 9.8
+   306→
+   307→    if CoF is not None and MassBox is not None and TableDistance is not None and HeightOfLabTable is not None:
+   308→        import math as _math3
+   309→        # Step 1: velocidade na borda da mesa (atrito desacelera)
+   310→        # v^2 = v0^2 - 2*mu*g*d
+   311→        v0_sq = StartSpeed**2 - 2 * CoF * GravField * TableDistance if StartSpeed else None
+   312→        if v0_sq is not None and v0_sq > 0:
+   313→            launch_speed = _math3.sqrt(v0_sq)
+   314→        else:
+   315→            launch_speed = 0
+   316→
+   317→        # Step 2: tempo de voo (queda livre)
+   318→        t_flight = _math3.sqrt(2 * HeightOfLabTable / GravField)
+   319→
+   320→        # Step 3: distância horizontal
+   321→        d_horizontal = launch_speed * t_flight
+   322→
+   323→        resultado["respostas"] = [f"{launch_speed:.2f}", f"{t_flight:.2f}", f"{d_horizontal:.2f}"]
+   324→        resultado["formulas"] = [
+   325→            f"v^2 = v0^2 - 2*mu*g*d = {StartSpeed}^2 - 2*{CoF}*{GravField}*{TableDistance} = {launch_speed:.4f} m/s",
+   326→            f"t = sqrt(2*h/g) = sqrt(2*{HeightOfLabTable}/{GravField}) = {t_flight:.4f} s",
+   327→            f"d = v*t = {launch_speed:.4f}*{t_flight:.4f} = {d_horizontal:.4f} m"
+   328→        ]
+   329→        resultado["passos"] = [
+   330→            f"1. Velocidade inicial: v0 = {StartSpeed:.4f} m/s",
+   331→            f"2. Atrito na mesa: mu = {CoF}",
+   332→            f"3. Distancia na mesa: d = {TableDistance} m",
+   333→            f"4. Velocidade na borda: v = sqrt(v0^2 - 2*mu*g*d) = {launch_speed:.4f} m/s",
+   334→            f"5. Altura da mesa: h = {HeightOfLabTable} m",
+   335→            f"6. Tempo de voo: t = sqrt(2h/g) = {t_flight:.4f} s",
+   336→            f"7. Distancia horizontal: d = v*t = {d_horizontal:.4f} m"
+   337→        ]
+   338→        return resultado
+   339→
+   340→    # --- Universal Gravity Problem ---
+   341→    m1 = variaveis.get("mass1")
+   342→    m2 = variaveis.get("mass2")
+   343→    Gc = variaveis.get("Gc") or 6.67e-11
+   344→    x1 = variaveis.get("XObject1")
+   345→    x2 = variaveis.get("XObject2")
+   346→
+   347→    if m1 is not None and m2 is not None and x1 is not None and x2 is not None:
+   348→        # Formula exata do simulador: rad = (XObject2 - XObject1) / 10
+   349→        rad = abs(x2 - x1) / 10.0
+   350→        F_gravity = Gc * m1 * m2 / (rad ** 2)
+   351→
+   352→        resultado["respostas"] = [f"{rad:.2f}", f"{F_gravity:.2e}"]
+   353→        resultado["formulas"] = [
+   354→            f"rad = (x2 - x1) / 10 = ({x2:.2f} - {x1:.2f}) / 10 = {rad:.4f} m",
+   355→            f"F = G*m1*m2/rad^2 = {Gc}*{m1:.2e}*{m2:.2e}/{rad:.4f}^2 = {F_gravity:.4e} N"
+   356→        ]
+   357→        resultado["passos"] = [
+   358→            f"1. Massa 1: m1 = {m1:.2e} kg",
+   359→            f"2. Massa 2: m2 = {m2:.2e} kg",
+   360→            f"3. Posicao objeto 1: x1 = {x1:.2f} px",
+   361→            f"4. Posicao objeto 2: x2 = {x2:.2f} px",
+   362→            f"5. Distancia entre centros: rad = (x2-x1)/10 = {rad:.4f} m",
+   363→            f"6. Forca gravitacional: F = G*m1*m2/rad^2 = {F_gravity:.4e} N"
+   364→        ]
+   365→        return resultado
+   366→
+   367→    return resultado
+   368→
+   369→
+   370→# ====================================================================
+   371→# 5. RESOLVEDOR - PHYSICS AVIARY
+   372→# ====================================================================
+   373→
+   374→def resolver_physics_aviary(pagina, url):
+   375→    """
+   376→    Resolve simuladores do Physics Aviary.
+   377→    Estrategia em camadas:
+   378→      1. Extrair variaveis JS + calculo direto
+   379→      2. Se falhar, usar VLM para ler o canvas + IA para calcular
+   380→      3. Se falhar, usar o texto da pagina + IA
+   381→    """
+   382→    resultados = {}
+   383→    usar_ia = False
+   384→
+   385→    # --- PASSO 0: Nome customizavel ---
+   386→    nome = resolver_physics_aviary.nome_aluno if hasattr(resolver_physics_aviary, 'nome_aluno') else "Physics Bot"
+   387→
+   388→    # --- PASSO 1: Preencher nome e clicar Begin ---
+   389→    print(f"[BOT] Iniciando simulador Physics Aviary (nome: {nome})...")
+   390→    try:
+   391→        name_field = pagina.locator("#StudentName")
+   392→        if name_field.count() > 0:
+   393→            name_field.fill(nome)
+   394→            time.sleep(0.3)
+   395→    except:
+   396→        pass
+   397→
+   398→    try:
+   399→        begin_btn = pagina.locator("#BeginButton")
+   400→        if begin_btn.count() > 0:
+   401→            begin_btn.click()
+   402→            print("[BOT] Clicou em Begin!")
+   403→            time.sleep(3)
+   404→    except:
+   405→        print("[BOT] Sem botao Begin, seguindo...")
+   406→
+   407→    # --- PASSO 2: Extrair variaveis JavaScript ---
+   408→    print("[BOT] Extraindo variaveis JavaScript...")
+   409→
+   410→    variaveis_conhecidas = [
+   411→        "StartingSpeed", "MassOfCar", "CoefficientOfFriction",
+   412→        "InitialVelocity", "FinalVelocity", "Angle", "InclineAngle",
+   413→        "Distance", "Time", "Mass", "Force", "AppliedForce",
+   414→        "CoefficientOfKineticFriction", "CoefficientOfStaticFriction",
+   415→        "coefficientoffriction",  # Newton's Law incline uses lowercase
+   416→        "Acceleration", "Gravity", "Height", "Velocity",
+   417→        "SpringConstant", "Amplitude", "Frequency", "Period",
+   418→        "Wavelength", "Charge", "Voltage", "Current",
+   419→        "Resistance", "Power", "Energy", "Momentum",
+   420→        "AngularVelocity", "Torque", "MomentOfInertia",
+   421→        "Radius", "Temperature", "Pressure", "Volume",
+   422→        "InitialHeight", "FinalHeight", "LaunchAngle",
+   423→        "LaunchSpeed", "Range", "MaxHeight",
+   424→        # Gas Giant specific
+   425→        "OrbitRadiusm", "OrbitRadiuspx", "MoonMass", "AngularSpeed",
+   426→        "PlanetSizepx", "PlanetSizem",
+   427→        # Friction to Projectile specific
+   428→        "StartSpeed", "MassOfBox", "HeightOfLabTable", "TableDistance",
+   429→        "GravitationalField", "HorizontalRange",
+   430→        "HeightOfLabTablemm", "MassOfBoxg", "TableDistancecm",
+   431→        # Newton's Law Incline specific
+   432→        "AngleOfIncline", "AngleinRad", "MassHanging", "SlidingMass",
+   433→        "Ff", "Fgx", "TotalForcex",
+   434→        # Universal Gravity specific
+   435→        "mass1", "mass2", "Gc", "Radius1m", "Radius2m",
+   436→        "Radius1", "Radius2", "XObject1", "XObject2", "YObject",
+   437→        # Common
+   438→        "mu", "muK", "muS", "theta",
+   439→        "k", "F", "v0", "v1", "v2",
+   440→        "m1", "m2", "r", "T",
+   441→    ]
+   442→
+   443→    variaveis_extraidas = {}
+   444→    for var in variaveis_conhecidas:
+   445→        try:
+   446→            valor = pagina.evaluate(f"typeof {var} !== 'undefined' ? {var} : null")
+   447→            # Filtra tipos validos (numeros, strings) e descarta Date objects etc
+   448→            if valor is not None and isinstance(valor, (int, float, str)):
+   449→                try:
+   450→                    float(valor)  # testa se e numerico
+   451→                    variaveis_extraidas[var] = valor
+   452→                except (ValueError, TypeError):
+   453→                    if isinstance(valor, str) and len(valor) < 50:
+   454→                        variaveis_extraidas[var] = valor
+   455→        except:
+   456→            pass
+   457→
+   458→    # Limpa variaveis que provavelmente sao internas do simulador
+   459→    # Mas preserva variaveis comuns em astronomia/gravity que usam numeros grandes
+   460→    variaveis_preservar = {
+   461→        'OrbitRadiusm', 'MoonMass', 'PlanetSizem',  # Gas Giant
+   462→        'mass1', 'mass2',  # Universal Gravity (big numbers)
+   463→        'StartSpeed',  # Friction to Projectile
+   464→        'XObject1', 'XObject2',  # Universal Gravity positions
+   465→        'Radius1', 'Radius2',  # Universal Gravity radius in pixels
+   466→    }
+   467→    variaveis_filtradas = {}
+   468→    for k, v in variaveis_extraidas.items():
+   469→        if k in variaveis_preservar:
+   470→            variaveis_filtradas[k] = v  # Preserva mesmo sendo grande
+   471→        elif isinstance(v, (int, float)) and abs(v) > 1e10:
+   472→            continue  # Remove only timestamps muito grandes (>10B)
+   473→        else:
+   474→            variaveis_filtradas[k] = v
+   475→
+   476→    variaveis_extraidas = variaveis_filtradas
+   477→    print(f"[BOT] Variaveis extraidas: {variaveis_extraidas}")
+   478→
+   479→    # --- PASSO 3: Ler enunciado e labels ---
+   480→    try:
+   481→        enunciado = pagina.locator("#SystemMessage").inner_text()
+   482→    except:
+   483→        try:
+   484→            enunciado = pagina.locator("#LabDirections").inner_text()
+   485→        except:
+   486→            enunciado = ""
+   487→
+   488→    labels = []
+   489→    try:
+   490→        for ft in pagina.locator(".FormText").all():
+   491→            labels.append(ft.inner_text())
+   492→    except:
+   493→        pass
+   494→
+   495→    # Conta quantos campos de resposta existem
+   496→    num_campos = 0
+   497→    for i in range(1, 10):
+   498→        try:
+   499→            if pagina.locator(f"#A{i}").count() > 0:
+   500→                num_campos = i
+   501→        except:
+   502→            break
+   503→
+   504→    print(f"[BOT] Enunciado: {enunciado[:200]}")
+   505→    print(f"[BOT] Campos ({num_campos}): {labels}")
+   506→
+   507→    # --- PASSO 4: Estrategia de resolucao em camadas ---
+   508→
+   509→    # Camada 1: Calculo direto
+   510→    titulo_pagina = pagina.title() if pagina else ""
+   511→    calculo_direto = calcular_direto_physics_aviary(variaveis_extraidas, titulo_pagina)
+   512→
+   513→    if calculo_direto["respostas"]:
+   514→        print(f"[BOT] Calculo direto disponivel! Respostas: {calculo_direto['respostas']}")
+   515→        respostas = calculo_direto["respostas"]
+   516→        passos = "\n".join(calculo_direto["passos"])
+   517→    else:
+   518→        # Camada 2: VLM para ler o canvas + IA para calcular
+   519→        print("[BOT] Calculo direto nao disponivel. Usando VLM + IA...")
+   520→
+   521→        # Screenshot do canvas para o VLM ler
+   522→        canvas_path = SCREENSHOT_DIR / "_canvas_temp.png"
+   523→        pagina.screenshot(path=str(canvas_path), full_page=True)
+   524→
+   525→        vlm_prompt = """Extraia TODOS os dados numericos e informacoes deste simulador de fisica.
+   526→Liste cada variavel com seu valor e unidade.
+   527→Exemplo: v = 20.0 m/s, mu = 0.39, m = 914 kg
+   528→Liste tambem o que esta sendo pedido (tempo, distancia, velocidade, etc)."""
+   529→
+   530→        vlm_resultado = ler_imagem_com_vlm(canvas_path, vlm_prompt)
+   531→        print(f"[VLM] Dados lidos: {vlm_resultado[:300]}")
+   532→
+   533→        # Agora manda para a IA calcular com os dados do VLM + enunciado
+   534→        contexto = f"Variaveis JS extraidas: {variaveis_extraidas}\n"
+   535→        if labels:
+   536→            contexto += f"Campos de resposta ({num_campos}): {labels}\n"
+   537→        if vlm_resultado:
+   538→            contexto += f"\nDados lidos pelo VLM do canvas:\n{vlm_resultado}\n"
+   539→
+   540→        conta, resposta_num, texto_completo = resolver_com_ia(
+   541→            enunciado if enunciado else "Resolva o problema de fisica mostrado na imagem",
+   542→            contexto
+   543→        )
+   544→        respostas = [r.strip() for r in resposta_num.split(";")]
+   545→        passos = conta
+   546→        usar_ia = True
+   547→
+   548→    print(f"\n[BOT] Calculos:\n{passos}")
+   549→    print(f"[BOT] Respostas: {respostas}")
+   550→
+   551→    # --- PASSO 5: Mostrar formulario de resposta ---
+   552→    # Alguns simuladores (Gas Giant) escondem o formulario ate usar o timer
+   553→    form_visivel = False
+   554→    try:
+   555→        form_visivel = pagina.locator("#A1").is_visible()
+   556→    except:
+   557→        pass
+   558→
+   559→    if not form_visivel:
+   560→        print("[BOT] Formulario oculto, ativando ferramentas...")
+   561→        # Tenta ToggleTools (Gas Giant style)
+   562→        try:
+   563→            toggle = pagina.locator("#ToggleTools")
+   564→            if toggle.count() > 0:
+   565→                toggle.click()
+   566→                time.sleep(0.5)
+   567→        except:
+   568→            pass
+   569→
+   570→        # Tenta Start/Stop timer para revelar formulario
+   571→        try:
+   572→            stop_btn = pagina.locator("#StopTimerButton")
+   573→            if stop_btn.count() > 0:
+   574→                stop_btn.click()  # Start timer
+   575→                time.sleep(1)
+   576→                stop_btn.click()  # Stop timer -> mostra formulario
+   577→                time.sleep(0.5)
+   578→        except:
+   579→            pass
+   580→
+   581→        # Force show como ultimo recurso
+   582→        try:
+   583→            if not pagina.locator("#A1").is_visible():
+   584→                pagina.evaluate('$("#SpaceForAnswer").show()')
+   585→                time.sleep(0.3)
+   586→        except:
+   587→            pass
+   588→
+   589→    # --- PASSO 5b: Preencher respostas ---
+   590→    for i, resp in enumerate(respostas):
+   591→        if i >= num_campos and num_campos > 0:
+   592→            break
+   593→        input_id = f"#A{i+1}"
+   594→        try:
+   595→            locator = pagina.locator(input_id)
+   596→            if locator.count() > 0 and locator.is_visible():
+   597→                locator.click()
+   598→                locator.fill("")
+   599→                locator.fill(resp)
+   600→                print(f"[BOT] Preencheu {input_id} com '{resp}'")
+   601→        except Exception as e:
+   602→            print(f"[BOT] Erro ao preencher {input_id}: {e}")
+   603→
+   604→    time.sleep(0.5)
+   605→
+   606→    # --- PASSO 6: Screenshot ANTES de submeter ---
+   607→    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+   608→    screenshot_pre = SCREENSHOT_DIR / f"antes_submeter_{timestamp}.png"
+   609→    pagina.screenshot(path=str(screenshot_pre), full_page=True)
+   610→
+   611→    # --- PASSO 7: Clicar em Check/Submit ---
+   612→    try:
+   613→        submit = pagina.locator("#SubmitButton")
+   614→        if submit.count() > 0:
+   615→            submit.click()
+   616→            print("[BOT] Clicou em Check! Aguardando animacao...")
+   617→
+   618→            # Espera a animacao terminar (Moving == "done")
+   619→            for _ in range(40):  # max 20 segundos
+   620→                time.sleep(0.5)
+   621→                try:
+   622→                    moving = pagina.evaluate("typeof Moving !== 'undefined' ? Moving : 'unknown'")
+   623→                    if moving == "done":
+   624→                        print("[BOT] Animacao concluida!")
+   625→                        break
+   626→                except:
+   627→                    pass
+   628→            time.sleep(1.5)  # Pausa extra para renderizar resultado final
+   629→        else:
+   630→            print("[BOT] Botao Check nao encontrado")
+   631→    except Exception as e:
+   632→        print(f"[BOT] Erro ao submeter: {e}")
+   633→
+   634→    # --- PASSO 8: Screenshot DEPOIS ---
+   635→    screenshot_pos = SCREENSHOT_DIR / f"resultado_{timestamp}.png"
+   636→    pagina.screenshot(path=str(screenshot_pos), full_page=True)
+   637→
+   638→    # --- PASSO 9: Verificar resultado ---
+   639→    resultado = "Ver screenshot"
+   640→    try:
+   641→        final_color = pagina.evaluate("typeof FinalColor !== 'undefined' ? FinalColor : null")
+   642→        if final_color:
+   643→            fc = str(final_color).upper()
+   644→            if "EEFFEE" in fc:
+   645→                resultado = "CORRETO!"
+   646→            elif "FFEEEE" in fc:
+   647→                resultado = "INCORRETO"
+   648→            else:
+   649→                resultado = f"Cor: {final_color}"
+   650→    except:
+   651→        pass
+   652→
+   653→    # Se nao detectou pela cor, usa VLM para verificar
+   654→    if resultado == "Ver screenshot":
+   655→        print("[BOT] Verificando resultado com VLM...")
+   656→        vlm_check = ler_imagem_com_vlm(
+   657→            screenshot_pos,
+   658→            "Esta imagem mostra o resultado de um simulador de fisica. "
+   659→            "Aparece CORRETO ou INCORRETO? Responda apenas: CORRETO ou INCORRETO"
+   660→        )
+   661→        if "CORRETO" in vlm_check.upper() and "INCORRETO" not in vlm_check.upper():
+   662→            resultado = "CORRETO! (VLM)"
+   663→        elif "INCORRETO" in vlm_check.upper():
+   664→            resultado = "INCORRETO (VLM)"
+   665→
+   666→    # Checa respostas corretas
+   667→    respostas_corretas = {}
+   668→    for i in range(1, 6):
+   669→        try:
+   670→            ans = pagina.evaluate(f"typeof Answer{i} !== 'undefined' ? Answer{i} : null")
+   671→            if ans is not None and isinstance(ans, (int, float)):
+   672→                respostas_corretas[f"Answer{i}"] = round(ans, 4)
+   673→        except:
+   674→            pass
+   675→
+   676→    # --- PASSO 10: Salvar ---
+   677→    resultados = {
+   678→        "url": url,
+   679→        "simulador": "Physics Aviary",
+   680→        "enunciado": enunciado,
+   681→        "variaveis_js": variaveis_extraidas,
+   682→        "campos": labels,
+   683→        "num_campos": num_campos,
+   684→        "calculos": passos,
+   685→        "respostas_enviadas": respostas,
+   686→        "respostas_corretas": respostas_corretas,
+   687→        "resultado": resultado,
+   688→        "metodo": "ia" if usar_ia else "calculo_direto",
+   689→        "screenshot_antes": str(screenshot_pre),
+   690→        "screenshot_depois": str(screenshot_pos),
+   691→        "timestamp": timestamp
+   692→    }
+   693→
+   694→    salvar_log(resultados)
+   695→    return resultados
+   696→
+   697→
+   698→# ====================================================================
+   699→# 6. RESOLVEDOR - GENERICO
+   700→# ====================================================================
+   701→
+   702→def resolver_generico(pagina, url):
+   703→    """Resolve simuladores genericos usando VLM + IA."""
+   704→    print("[BOT] Modo generico - usando VLM + IA...")
+   705→
+   706→    # Screenshot para o VLM ler
+   707→    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+   708→    canvas_path = SCREENSHOT_DIR / f"_generico_{timestamp}.png"
+   709→    pagina.screenshot(path=str(canvas_path), full_page=True)
+   710→
+   711→    # Le a pagina com VLM
+   712→    vlm_prompt = """Analise este simulador de fisica. Extraia:
+   713→1. Todos os dados numericos (valores e unidades)
+   714→2. O que esta sendo pedido (quais respostas)
+   715→3. Onde digitar as respostas (campos de input)
+   716→Seja especifico com os numeros."""
+   717→    vlm_dados = ler_imagem_com_vlm(canvas_path, vlm_prompt)
+   718→    print(f"[VLM] Dados: {vlm_dados[:300]}")
+   719→
+   720→    # Le texto da pagina como complemento
+   721→    try:
+   722→        texto_pagina = pagina.inner_text("body")
+   723→    except:
+   724→        texto_pagina = ""
+   725→
+   726→    # Resolve com IA
+   727→    contexto = f"Dados do VLM:\n{vlm_dados}\n\nTexto da pagina:\n{texto_pagina[:1000]}"
+   728→    conta, resposta_num, texto_completo = resolver_com_ia(
+   729→        "Resolva este problema de fisica do simulador", contexto
+   730→    )
+   731→    respostas = [r.strip() for r in resposta_num.split(";")]
+   732→
+   733→    # Tenta preencher campos
+   734→    inputs = pagina.locator("input[type='text'], input[type='number'], .FormInputs").all()
+   735→    for i, (inp, resp) in enumerate(zip(inputs, respostas)):
+   736→        try:
+   737→            inp.fill(resp)
+   738→            print(f"[BOT] Preencheu campo {i+1} com '{resp}'")
+   739→        except:
+   740→            pass
+   741→
+   742→    time.sleep(0.5)
+   743→
+   744→    # Screenshot antes
+   745→    screenshot_pre = SCREENSHOT_DIR / f"antes_submeter_{timestamp}.png"
+   746→    pagina.screenshot(path=str(screenshot_pre), full_page=True)
+   747→
+   748→    # Tenta submeter
+   749→    for sel in ["#SubmitButton", ".Button", "button:has-text('Check')",
+   750→                "button:has-text('Submit')", "input[type='submit']"]:
+   751→        try:
+   752→            loc = pagina.locator(sel)
+   753→            if loc.count() > 0:
+   754→                loc.first.click()
+   755→                print(f"[BOT] Clicou em {sel}!")
+   756→                break
+   757→        except:
+   758→            continue
+   759→
+   760→    time.sleep(4)
+   761→
+   762→    # Screenshot depois
+   763→    screenshot_pos = SCREENSHOT_DIR / f"resultado_{timestamp}.png"
+   764→    pagina.screenshot(path=str(screenshot_pos), full_page=True)
+   765→
+   766→    # Verifica com VLM
+   767→    vlm_check = ler_imagem_com_vlm(
+   768→        screenshot_pos,
+   769→        "O resultado esta CORRETO ou INCORRETO? Responda apenas: CORRETO ou INCORRETO"
+   770→    )
+   771→    resultado = "Ver screenshot"
+   772→    if "CORRETO" in vlm_check.upper() and "INCORRETO" not in vlm_check.upper():
+   773→        resultado = "CORRETO! (VLM)"
+   774→    elif "INCORRETO" in vlm_check.upper():
+   775→        resultado = "INCORRETO (VLM)"
+   776→
+   777→    resultados = {
+   778→        "url": url,
+   779→        "simulador": "Generico",
+   780→        "calculos": conta,
+   781→        "respostas_enviadas": respostas,
+   782→        "resultado": resultado,
+   783→        "screenshot_antes": str(screenshot_pre),
+   784→        "screenshot_depois": str(screenshot_pos),
+   785→        "timestamp": timestamp
+   786→    }
+   787→
+   788→    salvar_log(resultados)
+   789→    return resultados
+   790→
+   791→
+   792→# ====================================================================
+   793→# 7. FUNCOES AUXILIARES
+   794→# ====================================================================
+   795→
+   796→def salvar_log(resultados):
+   797→    """Salva os resultados em arquivo de log."""
+   798→    with open(LOG_FILE, "a", encoding="utf-8") as f:
+   799→        f.write(f"\n{'='*60}\n")
+   800→        f.write(f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n")
+   801→        f.write(f"URL: {resultados.get('url', 'N/A')}\n")
+   802→        f.write(f"Simulador: {resultados.get('simulador', 'N/A')}\n")
+   803→        if 'enunciado' in resultados:
+   804→            f.write(f"Enunciado: {resultados['enunciado']}\n")
+   805→        if 'variaveis_js' in resultados:
+   806→            f.write(f"Variaveis JS: {resultados['variaveis_js']}\n")
+   807→        if 'campos' in resultados:
+   808→            f.write(f"Campos: {resultados['campos']}\n")
+   809→        f.write(f"Calculos:\n{resultados.get('calculos', 'N/A')}\n")
+   810→        f.write(f"Respostas Enviadas: {resultados.get('respostas_enviadas', 'N/A')}\n")
+   811→        if 'respostas_corretas' in resultados:
+   812→            f.write(f"Respostas Corretas: {resultados['respostas_corretas']}\n")
+   813→        f.write(f"Resultado: {resultados.get('resultado', 'N/A')}\n")
+   814→        f.write(f"Metodo: {resultados.get('metodo', 'N/A')}\n")
+   815→    print(f"[BOT] Log salvo em: {LOG_FILE}")
+   816→
+   817→
+   818→# ====================================================================
+   819→# 8. FUNCAO PRINCIPAL
+   820→# ====================================================================
+   821→
+   822→def resolver_simulador(url, nome="Physics Bot"):
+   823→    """Funcao principal. Recebe uma URL e resolve o simulador."""
+   824→    if not url or not url.startswith("http"):
+   825→        print(f"[ERRO] URL invalida: {url}")
+   826→        return None
+   827→
+   828→    # Configura nome do aluno
+   829→    resolver_physics_aviary.nome_aluno = nome
+   830→
+   831→    print(f"\n{'='*60}")
+   832→    print(f"  PHYSICS BOT v2 - Iniciando resolucao")
+   833→    print(f"  URL: {url}")
+   834→    print(f"  Nome: {nome}")
+   835→    print(f"{'='*60}\n")
+   836→
+   837→    from playwright.sync_api import sync_playwright
+   838→
+   839→    with sync_playwright() as p:
+   840→        navegador = p.chromium.launch(headless=True)
+   841→        contexto = navegador.new_context(
+   842→            viewport={"width": 1280, "height": 900},
+   843→            screen={"width": 1280, "height": 900}
+   844→        )
+   845→        pagina = contexto.new_page()
+   846→
+   847→        print(f"[BOT] Acessando: {url}...")
+   848→        pagina.goto(url, wait_until="domcontentloaded", timeout=30000)
+   849→        time.sleep(3)
+   850→
+   851→        tipo = detectar_simulador(url, pagina)
+   852→        print(f"[BOT] Tipo detectado: {tipo}")
+   853→
+   854→        if tipo == "physics_aviary":
+   855→            resultados = resolver_physics_aviary(pagina, url)
+   856→        else:
+   857→            resultados = resolver_generico(pagina, url)
+   858→
+   859→        navegador.close()
+   860→
+   861→    # Resumo final
+   862→    print(f"\n{'='*60}")
+   863→    print(f"  RESULTADO FINAL")
+   864→    print(f"{'='*60}")
+   865→    if resultados:
+   866→        print(f"  Resultado: {resultados.get('resultado', 'N/A')}")
+   867→        print(f"  Metodo: {resultados.get('metodo', 'N/A')}")
+   868→        print(f"  Calculos:\n    {resultados.get('calculos', 'N/A')[:200]}")
+   869→        print(f"  Respostas: {resultados.get('respostas_enviadas', 'N/A')}")
+   870→        if resultados.get('respostas_corretas'):
+   871→            print(f"  Corretas: {resultados['respostas_corretas']}")
+   872→        print(f"  Screenshots: {SCREENSHOT_DIR}")
+   873→    print(f"{'='*60}\n")
+   874→
+   875→    return resultados
+   876→
+   877→
+   878→# ====================================================================
+   879→# 9. ENTRY POINT
+   880→# ====================================================================
+   881→
+   882→if __name__ == "__main__":
+   883→    if len(sys.argv) > 1:
+   884→        url = sys.argv[1]
+   885→        nome = sys.argv[2] if len(sys.argv) > 2 else "Physics Bot"
+   886→        resultado = resolver_simulador(url, nome)
+   887→    else:
+   888→        print("Uso: python physics_bot.py <URL_DO_SIMULADOR> [NOME_DO_ALUNO]")
+   889→        print("Exemplo: python physics_bot.py https://thephysicsaviary.com/Physics/APPrograms/CarStoppingProblem/ Helio")
+   890→
